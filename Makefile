@@ -22,7 +22,7 @@ clean: |
 dist/:
 	mkdir -p dist
 
-build: safebox
+build: clean safebox
 
 safebox:
 	CGO_ENABLED=0 go build -trimpath $(LDFLAGS) -o $@
