@@ -1,0 +1,23 @@
+provider: ssm
+
+defaults:
+  path: /${STAGE}/gateway/
+
+params:
+  - name: DB_NAME
+    description: 'database name'
+    value: database-name
+    override:
+      production: production-database-name
+      staging: staging-database-name
+
+  - name: DB_PASSWORD
+    description: 'database password'
+    secret: true
+
+  - name: DB_PORT
+    required: false
+
+  - name: DATADOG_API_KEY
+    path: /shared/
+    secret: true

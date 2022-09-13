@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"log"
-
+	c "github.com/adikari/safebox/v2/config"
 	"github.com/spf13/cobra"
 )
 
@@ -19,6 +18,6 @@ func init() {
 }
 
 func execute(cmd *cobra.Command, args []string) error {
-	log.Print(stage)
+	c.LoadConfig()
 	return nil
 }
