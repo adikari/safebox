@@ -1,23 +1,18 @@
+service: safebox
 provider: ssm
 
-defaults:
-  path: /${STAGE}/gateway/
+config:
+  defaults:
+    DB_NAME: "database name"
+    API_ENDPOINT: "endpoint"
 
-params:
-  - name: DB_NAME
-    description: 'database name'
-    value: database-name
-    override:
-      production: production-database-name
-      staging: staging-database-name
+  prod:
+    DB_NAME: "production db name"
 
-  - name: DB_PASSWORD
-    description: 'database password'
-    secret: true
+  dev:
+    DB_NAME: "dev db name"
 
-  - name: DB_PORT
-    required: false
+  shared:
+    SHARED_KEY: "shared key"
 
-  - name: DATADOG_API_KEY
-    path: /shared/
-    secret: true
+

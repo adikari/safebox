@@ -22,9 +22,9 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.Flags().StringVarP(&stage, "stage", "s", "", "stage to deploy to")
-	rootCmd.Flags().StringVarP(&config, "config", "c", "safebox.yml", "path to safebox configuration file")
-	rootCmd.MarkFlagRequired("stage")
+	rootCmd.PersistentFlags().StringVarP(&stage, "stage", "s", "", "stage to deploy to")
+	rootCmd.PersistentFlags().StringVarP(&config, "config", "c", "safebox.yml", "path to safebox configuration file")
+	rootCmd.MarkPersistentFlagRequired("stage")
 }
 
 func Execute(version string) {

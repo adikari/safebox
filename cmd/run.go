@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"log"
+
 	c "github.com/adikari/safebox/v2/config"
 	"github.com/spf13/cobra"
 )
@@ -10,7 +12,7 @@ var runCmd = &cobra.Command{
 	Use:     "run",
 	Short:   "Deploys all configurations specified in config file",
 	RunE:    execute,
-	Example: `TODO`,
+	Example: `TODO: run command example`,
 }
 
 func init() {
@@ -18,6 +20,14 @@ func init() {
 }
 
 func execute(cmd *cobra.Command, args []string) error {
-	c.LoadConfig()
+	params := c.LoadParam{
+		Path:  config,
+		Stage: stage,
+	}
+
+	config, err := c.Load(params)
+
+	log.Printf("%v", config)
+	log.Printf("%v", err)
 	return nil
 }
