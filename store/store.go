@@ -5,16 +5,13 @@ import (
 	"time"
 )
 
-type Metadata struct {
-	Created   time.Time
-	CreatedBy string
-	Version   int
-	Key       string
-}
-
 type Config struct {
-	Value *string
-	Metadata
+	Name     *string
+	Value    *string
+	Modified time.Time
+	Version  int
+	Type     string
+	DataType string
 }
 
 type ConfigInput struct {

@@ -1,7 +1,6 @@
 package store
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -94,7 +93,30 @@ func (s *SSMStore) Delete(key string) error {
 }
 
 func (s *SSMStore) GetMany(keys []string) ([]Config, error) {
-	return nil, nil
+	var names []*string
+
+	for _, key := range keys {
+		names = append(names, aws.String(key))
+	}
+
+	getParametersInput := &ssm.GetParametersInput{
+		Names:          names,
+		WithDecryption: aws.Bool(true),
+	}
+
+	resp, err := s.svc.GetParameters(getParametersInput)
+
+	if err != nil {
+		return []Config{}, err
+	}
+
+	var params []Config
+
+	for _, param := range resp.Parameters {
+		params = append(params, parameterToConfig(param))
+	}
+
+	return params, nil
 }
 
 func (s *SSMStore) GetAll() ([]Config, error) {
@@ -151,8 +173,7 @@ func (s *SSMStore) Get(key string) (Config, error) {
 	}
 
 	return Config{
-		Value:    param.Value,
-		Metadata: mapMetadata(parameter),
+		Value: param.Value,
 	}, nil
 }
 
@@ -165,15 +186,13 @@ func basePath(key string) string {
 	return strings.Join(pathParts[0:end], "/")
 }
 
-func mapMetadata(p *ssm.ParameterMetadata) Metadata {
-	version := 0
-	if p.Description != nil {
-		version, _ = strconv.Atoi(*p.Description)
-	}
-	return Metadata{
-		Created:   *p.LastModifiedDate,
-		CreatedBy: *p.LastModifiedUser,
-		Version:   version,
-		Key:       *p.Name,
+func parameterToConfig(param *ssm.Parameter) Config {
+	return Config{
+		Name:     param.Name,
+		Value:    param.Value,
+		Modified: *param.LastModifiedDate,
+		Version:  int(*param.Version),
+		Type:     *param.Type,
+		DataType: *param.DataType,
 	}
 }

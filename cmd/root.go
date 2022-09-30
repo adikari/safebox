@@ -15,6 +15,7 @@ var (
 	stage        string
 	pathToConfig string
 	Config       *c.Config
+	TimeFormat   = "2006-01-02 15:04:05"
 )
 
 var rootCmd = &cobra.Command{
