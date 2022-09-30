@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/adikari/safebox/v2/store"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -18,13 +19,19 @@ func init() {
 }
 
 func run(cmd *cobra.Command, args []string) error {
-	store, err := getStore()
+	config, err := loadConfig()
+
+	if err != nil {
+		return errors.Wrap(err, "failed to load config")
+	}
+
+	store, err := store.GetStore(config.Provider)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to instantiate store")
 	}
 
-	err = store.PutMany(Config.Configs)
+	err = store.PutMany(config.Configs)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to write param")

@@ -32,7 +32,13 @@ func init() {
 }
 
 func list(cmd *cobra.Command, args []string) error {
-	store, err := getStore()
+	config, err := loadConfig()
+
+	if err != nil {
+		return errors.Wrap(err, "failed to load config")
+	}
+
+	store, err := store.GetStore(config.Provider)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to instantiate store")
@@ -40,7 +46,7 @@ func list(cmd *cobra.Command, args []string) error {
 
 	var keys []string
 
-	for _, value := range Config.Configs {
+	for _, value := range config.Configs {
 		keys = append(keys, value.Key)
 	}
 

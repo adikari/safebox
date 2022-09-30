@@ -41,9 +41,18 @@ func Load(param LoadParam) (*Config, error) {
 		return nil, fmt.Errorf("could not parse safebox config file %s", param.Path)
 	}
 
+	if rc.Service == "" {
+		return nil, fmt.Errorf("'service' missing in config file%s", param.Path)
+	}
+
 	c := Config{}
 	c.Service = rc.Service
 	c.Provider = rc.Provider
+
+	if c.Provider == "" {
+		c.Provider = store.SsmProvider
+	}
+
 	parseConfig(rc, &c, param)
 
 	return &c, nil
