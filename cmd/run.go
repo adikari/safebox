@@ -3,7 +3,6 @@ package cmd
 import (
 	"log"
 
-	c "github.com/adikari/safebox/v2/config"
 	"github.com/spf13/cobra"
 )
 
@@ -20,14 +19,8 @@ func init() {
 }
 
 func execute(cmd *cobra.Command, args []string) error {
-	params := c.LoadParam{
-		Path:  config,
-		Stage: stage,
-	}
-
-	config, err := c.Load(params)
-
-	log.Printf("%v", config)
+	_, err := getStore()
+	log.Printf("%v", Config)
 	log.Printf("%v", err)
 	return nil
 }

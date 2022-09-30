@@ -16,7 +16,7 @@ type SSMStore struct {
 	svc ssmiface.SSMAPI
 }
 
-func NewSSMStore(numRetries int) (*SSMStore, error) {
+func NewSSMStore() (*SSMStore, error) {
 	ssmSession := session.Must(session.NewSession())
 
 	svc := ssm.New(ssmSession)
