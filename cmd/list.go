@@ -25,8 +25,8 @@ var (
 )
 
 func init() {
-	listCmd.Flags().BoolVarP(&sortByModified, "modified", "m", false, "Sort by modified time")
-	listCmd.Flags().BoolVarP(&sortByVersion, "version", "v", false, "Sort by version")
+	listCmd.Flags().BoolVarP(&sortByModified, "modified", "m", false, "sort by modified time")
+	listCmd.Flags().BoolVarP(&sortByVersion, "version", "v", false, "sort by version")
 
 	rootCmd.AddCommand(listCmd)
 }

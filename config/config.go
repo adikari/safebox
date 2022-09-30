@@ -80,7 +80,7 @@ func parseConfig(rc rawConfig, c *Config, param LoadParam) {
 
 	for key, value := range temp {
 		c.Configs = append(c.Configs, store.ConfigInput{
-			Key:    key,
+			Name:   key,
 			Value:  value,
 			Secret: false,
 		})

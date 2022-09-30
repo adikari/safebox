@@ -58,7 +58,7 @@ func (s *SSMStore) Put(input ConfigInput) error {
 	}
 
 	putParameterInput := &ssm.PutParameterInput{
-		Name:      aws.String(input.Key),
+		Name:      aws.String(input.Name),
 		Type:      aws.String(configType),
 		Value:     aws.String(input.Value),
 		Overwrite: aws.Bool(true),
@@ -81,7 +81,7 @@ func (s *SSMStore) Delete(config ConfigInput) error {
 	}
 
 	deleteParameterInput := &ssm.DeleteParameterInput{
-		Name: aws.String(config.Key),
+		Name: aws.String(config.Name),
 	}
 
 	_, err = s.svc.DeleteParameter(deleteParameterInput)
@@ -147,7 +147,7 @@ func getNames(configs []ConfigInput) []*string {
 	var keys []string
 
 	for _, value := range configs {
-		keys = append(keys, value.Key)
+		keys = append(keys, value.Name)
 	}
 
 	var names []*string

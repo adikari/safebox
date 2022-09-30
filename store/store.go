@@ -16,22 +16,12 @@ type Config struct {
 	DataType string
 }
 
-func (c *Config) Key() string {
-	parts := strings.Split(*c.Name, "/")
-	return parts[len(parts)-1]
-}
-
-func (c *Config) Path() string {
-	parts := strings.Split(*c.Name, "/")
-	return strings.Join(parts[0:len(parts)-1], "/")
-}
-
 const (
 	SsmProvider = "ssm"
 )
 
 type ConfigInput struct {
-	Key    string
+	Name   string
 	Value  string
 	Secret bool
 }
@@ -55,4 +45,19 @@ func GetStore(provider string) (Store, error) {
 	default:
 		return nil, fmt.Errorf("invalid provider `%s`", provider)
 	}
+}
+
+func (c *Config) Key() string {
+	parts := strings.Split(*c.Name, "/")
+	return parts[len(parts)-1]
+}
+
+func (c *ConfigInput) Key() string {
+	parts := strings.Split(c.Name, "/")
+	return parts[len(parts)-1]
+}
+
+func (c *Config) Path() string {
+	parts := strings.Split(*c.Name, "/")
+	return strings.Join(parts[0:len(parts)-1], "/")
 }

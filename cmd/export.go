@@ -20,6 +20,7 @@ const doubleQuoteSpecialChars = "\\\n\r\"!$`"
 var (
 	exportFormat string
 	outputFile   string
+	keysToExport []string
 
 	exportCmd = &cobra.Command{
 		Use:     "export",
@@ -30,8 +31,9 @@ var (
 )
 
 func init() {
-	exportCmd.Flags().StringVarP(&exportFormat, "format", "f", "json", "Output format (json, yaml, dotenv)")
-	exportCmd.Flags().StringVarP(&outputFile, "output-file", "o", "", "Output file (default is standard output)")
+	exportCmd.Flags().StringVarP(&exportFormat, "format", "f", "json", "output format (json, yaml, dotenv)")
+	exportCmd.Flags().StringVarP(&outputFile, "output-file", "o", "", "output file (default is standard output)")
+	exportCmd.Flags().StringSliceVarP(&keysToExport, "key", "k", []string{}, "only export specified config (default is export all)")
 	exportCmd.MarkFlagFilename("output-file")
 
 	rootCmd.AddCommand(exportCmd)
@@ -50,7 +52,13 @@ func export(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to instantiate store")
 	}
 
-	configs, err := store.GetMany(config.Configs)
+	toExport, err := configsToExport(config.Configs)
+
+	if err != nil {
+		return err
+	}
+
+	configs, err := store.GetMany(toExport)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to get params")
@@ -135,4 +143,30 @@ func doubleQuoteEscape(line string) string {
 		line = strings.Replace(line, string(c), toReplace, -1)
 	}
 	return line
+}
+
+func configsToExport(configs []store.ConfigInput) ([]store.ConfigInput, error) {
+	if len(keysToExport) == 0 {
+		return configs, nil
+	}
+
+	result := []store.ConfigInput{}
+
+	for _, key := range keysToExport {
+		var found bool
+
+		for _, config := range configs {
+			if config.Key() == key {
+				found = true
+				result = append(result, config)
+				break
+			}
+		}
+
+		if !found {
+			return nil, errors.Errorf("key '%s' is not found in safebox config file", key)
+		}
+	}
+
+	return result, nil
 }
