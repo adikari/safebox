@@ -73,15 +73,15 @@ func (s *SSMStore) Put(input ConfigInput) error {
 	return nil
 }
 
-func (s *SSMStore) Delete(key string) error {
-	_, err := s.Get(key)
+func (s *SSMStore) Delete(config ConfigInput) error {
+	_, err := s.Get(config)
 
 	if err != nil {
 		return err
 	}
 
 	deleteParameterInput := &ssm.DeleteParameterInput{
-		Name: aws.String(key),
+		Name: aws.String(config.Key),
 	}
 
 	_, err = s.svc.DeleteParameter(deleteParameterInput)
@@ -92,15 +92,9 @@ func (s *SSMStore) Delete(key string) error {
 	return nil
 }
 
-func (s *SSMStore) GetMany(keys []string) ([]Config, error) {
-	var names []*string
-
-	for _, key := range keys {
-		names = append(names, aws.String(key))
-	}
-
+func (s *SSMStore) GetMany(configs []ConfigInput) ([]Config, error) {
 	getParametersInput := &ssm.GetParametersInput{
-		Names:          names,
+		Names:          getNames(configs),
 		WithDecryption: aws.Bool(true),
 	}
 
@@ -119,62 +113,14 @@ func (s *SSMStore) GetMany(keys []string) ([]Config, error) {
 	return params, nil
 }
 
-func (s *SSMStore) GetAll() ([]Config, error) {
-	return nil, nil
-}
-
-func (s *SSMStore) Get(key string) (Config, error) {
-	getParametersInput := &ssm.GetParametersInput{
-		Names:          []*string{aws.String(key)},
-		WithDecryption: aws.Bool(true),
-	}
-
-	resp, err := s.svc.GetParameters(getParametersInput)
+func (s *SSMStore) Get(config ConfigInput) (Config, error) {
+	configs, err := s.GetMany([]ConfigInput{config})
 
 	if err != nil {
 		return Config{}, err
 	}
 
-	if len(resp.Parameters) == 0 {
-		return Config{}, ConfigNotFoundError
-	}
-
-	param := resp.Parameters[0]
-	var parameter *ssm.ParameterMetadata
-	var describeParametersInput *ssm.DescribeParametersInput
-
-	// There is no way to use describe parameters to get a single key
-	// if that key uses paths, so instead get all the keys for a path,
-	// then find the one you are looking for :(
-	describeParametersInput = &ssm.DescribeParametersInput{
-		ParameterFilters: []*ssm.ParameterStringFilter{
-			{
-				Key:    aws.String("Path"),
-				Option: aws.String("OneLevel"),
-				Values: []*string{aws.String(basePath(key))},
-			},
-		},
-	}
-
-	if err := s.svc.DescribeParametersPages(describeParametersInput, func(o *ssm.DescribeParametersOutput, lastPage bool) bool {
-		for _, param := range o.Parameters {
-			if *param.Name == key {
-				parameter = param
-				return false
-			}
-		}
-		return true
-	}); err != nil {
-		return Config{}, err
-	}
-
-	if parameter == nil {
-		return Config{}, ConfigNotFoundError
-	}
-
-	return Config{
-		Value: param.Value,
-	}, nil
+	return configs[0], nil
 }
 
 func basePath(key string) string {
@@ -195,4 +141,20 @@ func parameterToConfig(param *ssm.Parameter) Config {
 		Type:     *param.Type,
 		DataType: *param.DataType,
 	}
+}
+
+func getNames(configs []ConfigInput) []*string {
+	var keys []string
+
+	for _, value := range configs {
+		keys = append(keys, value.Key)
+	}
+
+	var names []*string
+
+	for _, key := range keys {
+		names = append(names, aws.String(key))
+	}
+
+	return names
 }

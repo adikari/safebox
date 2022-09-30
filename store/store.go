@@ -43,10 +43,9 @@ var (
 type Store interface {
 	Put(input ConfigInput) error
 	PutMany(input []ConfigInput) error
-	Get(key string) (Config, error)
-	GetMany(keys []string) ([]Config, error)
-	GetAll() ([]Config, error)
-	Delete(key string) error
+	Get(config ConfigInput) (Config, error)
+	GetMany(configs []ConfigInput) ([]Config, error)
+	Delete(config ConfigInput) error
 }
 
 func GetStore(provider string) (Store, error) {

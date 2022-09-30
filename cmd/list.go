@@ -44,13 +44,7 @@ func list(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to instantiate store")
 	}
 
-	var keys []string
-
-	for _, value := range config.Configs {
-		keys = append(keys, value.Key)
-	}
-
-	configs, err := store.GetMany(keys)
+	configs, err := store.GetMany(config.Configs)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to list params")
