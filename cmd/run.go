@@ -24,7 +24,11 @@ func execute(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to instantiate store")
 	}
 
-	store.WriteMany(Config.Configs)
+	err = store.PutMany(Config.Configs)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to write param")
+	}
 
 	return nil
 }

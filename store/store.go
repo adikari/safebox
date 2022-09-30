@@ -28,10 +28,10 @@ var (
 )
 
 type Store interface {
-	Write(input ConfigInput) error
-	WriteMany(input []ConfigInput) error
-	Read(key string) (Config, error)
-	ReadMany(keys []string) ([]Config, error)
-	ReadAll() ([]Config, error)
+	Put(input ConfigInput) error
+	PutMany(input []ConfigInput) error
+	Get(key string) (Config, error)
+	GetMany(keys []string) ([]Config, error)
+	GetAll() ([]Config, error)
 	Delete(key string) error
 }

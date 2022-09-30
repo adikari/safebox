@@ -1,17 +1,22 @@
 package store
 
 import (
-	"log"
 	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
 )
 
 var _ Store = &SSMStore{}
+
+var (
+	numberOfRetries = 10
+	throttleDelay   = client.DefaultRetryerMinRetryDelay
+)
 
 type SSMStore struct {
 	svc ssmiface.SSMAPI
@@ -20,44 +25,47 @@ type SSMStore struct {
 func NewSSMStore() (*SSMStore, error) {
 	ssmSession := session.Must(session.NewSession())
 
-	svc := ssm.New(ssmSession)
+	retryer := client.DefaultRetryer{
+		NumMaxRetries:    numberOfRetries,
+		MinThrottleDelay: throttleDelay,
+	}
+
+	svc := ssm.New(ssmSession, &aws.Config{
+		Retryer: retryer,
+	})
 
 	return &SSMStore{
 		svc: svc,
 	}, nil
 }
 
-func (s *SSMStore) WriteMany(input []ConfigInput) error {
-	log.Printf("%v", input)
+func (s *SSMStore) PutMany(input []ConfigInput) error {
+	for _, config := range input {
+		err := s.Put(config)
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
-func (s *SSMStore) Write(input ConfigInput) error {
-	version := 1
-	current, err := s.Read(input.Key)
-
-	if err != nil && err != ConfigNotFoundError {
-		return err
-	}
-
-	if err == nil {
-		version = current.Metadata.Version + 1
-	}
-
+func (s *SSMStore) Put(input ConfigInput) error {
 	configType := "String"
+
 	if input.Secret == true {
 		configType = "SecureString"
 	}
 
 	putParameterInput := &ssm.PutParameterInput{
-		Name:        aws.String(input.Key),
-		Type:        aws.String(configType),
-		Value:       aws.String(input.Value),
-		Overwrite:   aws.Bool(true),
-		Description: aws.String(strconv.Itoa(version)),
+		Name:      aws.String(input.Key),
+		Type:      aws.String(configType),
+		Value:     aws.String(input.Value),
+		Overwrite: aws.Bool(true),
 	}
 
-	_, err = s.svc.PutParameter(putParameterInput)
+	_, err := s.svc.PutParameter(putParameterInput)
 
 	if err != nil {
 		return err
@@ -67,7 +75,8 @@ func (s *SSMStore) Write(input ConfigInput) error {
 }
 
 func (s *SSMStore) Delete(key string) error {
-	_, err := s.Read(key)
+	_, err := s.Get(key)
+
 	if err != nil {
 		return err
 	}
@@ -84,15 +93,15 @@ func (s *SSMStore) Delete(key string) error {
 	return nil
 }
 
-func (s *SSMStore) ReadMany(keys []string) ([]Config, error) {
+func (s *SSMStore) GetMany(keys []string) ([]Config, error) {
 	return nil, nil
 }
 
-func (s *SSMStore) ReadAll() ([]Config, error) {
+func (s *SSMStore) GetAll() ([]Config, error) {
 	return nil, nil
 }
 
-func (s *SSMStore) Read(key string) (Config, error) {
+func (s *SSMStore) Get(key string) (Config, error) {
 	getParametersInput := &ssm.GetParametersInput{
 		Names:          []*string{aws.String(key)},
 		WithDecryption: aws.Bool(true),
