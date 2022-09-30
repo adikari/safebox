@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"log"
-
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -19,8 +18,13 @@ func init() {
 }
 
 func execute(cmd *cobra.Command, args []string) error {
-	_, err := getStore()
-	log.Printf("%v", Config)
-	log.Printf("%v", err)
+	store, err := getStore()
+
+	if err != nil {
+		return errors.Wrap(err, "failed to instantiate store")
+	}
+
+	store.WriteMany(Config.Configs)
+
 	return nil
 }

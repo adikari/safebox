@@ -7,6 +7,7 @@ import (
 
 	c "github.com/adikari/safebox/v2/config"
 	"github.com/adikari/safebox/v2/store"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -17,10 +18,11 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:              "safebox",
-	Short:            "SafeBox is a secret manager CLI program",
-	Long:             `A Fast and Flexible secret manager built with love by adikari in Go.`,
-	PersistentPreRun: prerun,
+	Use:               "safebox",
+	Short:             "SafeBox is a secret manager CLI program",
+	Long:              `A Fast and Flexible secret manager built with love by adikari in Go.`,
+	PersistentPreRunE: prerun,
+	SilenceUsage:      true,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Usage()
 	},
@@ -44,9 +46,15 @@ func Execute(version string) {
 	}
 }
 
-func prerun(cmd *cobra.Command, args []string) {
-	c, _ := loadConfig()
+func prerun(cmd *cobra.Command, args []string) error {
+	c, err := loadConfig()
+
+	if err != nil {
+		return errors.Wrap(err, "failed to load config")
+	}
+
 	Config = c
+	return nil
 }
 
 func loadConfig() (*c.Config, error) {

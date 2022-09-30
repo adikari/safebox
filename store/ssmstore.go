@@ -1,6 +1,7 @@
 package store
 
 import (
+	"log"
 	"strconv"
 	"strings"
 
@@ -26,9 +27,14 @@ func NewSSMStore() (*SSMStore, error) {
 	}, nil
 }
 
-func (s *SSMStore) Write(input WriteConfigInput) error {
+func (s *SSMStore) WriteMany(input []ConfigInput) error {
+	log.Printf("%v", input)
+	return nil
+}
+
+func (s *SSMStore) Write(input ConfigInput) error {
 	version := 1
-	current, err := s.Read(input.ConfigId)
+	current, err := s.Read(input.Key)
 
 	if err != nil && err != ConfigNotFoundError {
 		return err
@@ -60,14 +66,14 @@ func (s *SSMStore) Write(input WriteConfigInput) error {
 	return nil
 }
 
-func (s *SSMStore) Delete(id ConfigId) error {
-	_, err := s.Read(id)
+func (s *SSMStore) Delete(key string) error {
+	_, err := s.Read(key)
 	if err != nil {
 		return err
 	}
 
 	deleteParameterInput := &ssm.DeleteParameterInput{
-		Name: aws.String(id.Key),
+		Name: aws.String(key),
 	}
 
 	_, err = s.svc.DeleteParameter(deleteParameterInput)
@@ -78,9 +84,17 @@ func (s *SSMStore) Delete(id ConfigId) error {
 	return nil
 }
 
-func (s *SSMStore) Read(id ConfigId) (Config, error) {
+func (s *SSMStore) ReadMany(keys []string) ([]Config, error) {
+	return nil, nil
+}
+
+func (s *SSMStore) ReadAll() ([]Config, error) {
+	return nil, nil
+}
+
+func (s *SSMStore) Read(key string) (Config, error) {
 	getParametersInput := &ssm.GetParametersInput{
-		Names:          []*string{aws.String(id.Key)},
+		Names:          []*string{aws.String(key)},
 		WithDecryption: aws.Bool(true),
 	}
 
@@ -106,14 +120,14 @@ func (s *SSMStore) Read(id ConfigId) (Config, error) {
 			{
 				Key:    aws.String("Path"),
 				Option: aws.String("OneLevel"),
-				Values: []*string{aws.String(basePath(id.Key))},
+				Values: []*string{aws.String(basePath(key))},
 			},
 		},
 	}
 
 	if err := s.svc.DescribeParametersPages(describeParametersInput, func(o *ssm.DescribeParametersOutput, lastPage bool) bool {
 		for _, param := range o.Parameters {
-			if *param.Name == id.Key {
+			if *param.Name == key {
 				parameter = param
 				return false
 			}

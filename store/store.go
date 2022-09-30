@@ -17,13 +17,8 @@ type Config struct {
 	Metadata
 }
 
-type ConfigId struct {
-	Path string
-	Key  string
-}
-
-type WriteConfigInput struct {
-	ConfigId
+type ConfigInput struct {
+	Key    string
 	Value  string
 	Secret bool
 }
@@ -33,10 +28,10 @@ var (
 )
 
 type Store interface {
-	Write(input WriteConfigInput) error
-	// WriteMany(input []WriteConfigInput) error
-	Read(id ConfigId) (Config, error)
-	// ReadMany(id []ConfigId) ([]Config, error)
-	// ReadAll() ([]Config, error)
-	Delete(id ConfigId) error
+	Write(input ConfigInput) error
+	WriteMany(input []ConfigInput) error
+	Read(key string) (Config, error)
+	ReadMany(keys []string) ([]Config, error)
+	ReadAll() ([]Config, error)
+	Delete(key string) error
 }

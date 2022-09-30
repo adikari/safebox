@@ -1,10 +1,10 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 
+	"github.com/adikari/safebox/v2/store"
 	"gopkg.in/yaml.v2"
 )
 
@@ -18,7 +18,7 @@ type rawConfig struct {
 type Config struct {
 	Provider string
 	Service  string
-	Config   map[string]string
+	Configs  []store.ConfigInput
 }
 
 type LoadParam struct {
@@ -30,7 +30,7 @@ func Load(param LoadParam) (*Config, error) {
 	yamlFile, err := ioutil.ReadFile(param.Path)
 
 	if err != nil {
-		return nil, errors.New("Could not find config file: " + param.Path)
+		return nil, fmt.Errorf("missing safebox config file %s", param.Path)
 	}
 
 	rc := rawConfig{}
@@ -38,7 +38,7 @@ func Load(param LoadParam) (*Config, error) {
 	err = yaml.Unmarshal(yamlFile, &rc)
 
 	if err != nil {
-		return nil, errors.New("Could not parse config file")
+		return nil, fmt.Errorf("could not parse safebox config file %s", param.Path)
 	}
 
 	c := Config{}
@@ -50,29 +50,38 @@ func Load(param LoadParam) (*Config, error) {
 }
 
 func parseConfig(rc rawConfig, c *Config, param LoadParam) {
-	c.Config = map[string]string{}
+	temp := map[string]string{}
+	c.Configs = []store.ConfigInput{}
 
 	defaultConfig := rc.Config["defaults"]
 	sharedConfig := rc.Config["shared"]
 	envConfig := rc.Config[param.Stage]
 
 	for key, value := range defaultConfig {
-		c.Config[formatKey(param.Stage, c.Service, key)] = value
+		temp[formatPath(param.Stage, c.Service, key)] = value
 	}
 
 	for key, value := range sharedConfig {
-		c.Config[formatSharedKey(param.Stage, key)] = value
+		temp[formatSharedPath(param.Stage, key)] = value
 	}
 
 	for key, value := range envConfig {
-		c.Config[formatKey(param.Stage, c.Service, key)] = value
+		temp[formatPath(param.Stage, c.Service, key)] = value
+	}
+
+	for key, value := range temp {
+		c.Configs = append(c.Configs, store.ConfigInput{
+			Key:    key,
+			Value:  value,
+			Secret: false,
+		})
 	}
 }
 
-func formatSharedKey(stage string, key string) string {
+func formatSharedPath(stage string, key string) string {
 	return fmt.Sprintf("/%s/shared/%s", stage, key)
 }
 
-func formatKey(stage string, service string, key string) string {
+func formatPath(stage string, service string, key string) string {
 	return fmt.Sprintf("/%s/%s/%s", stage, service, key)
 }
