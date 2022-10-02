@@ -25,13 +25,13 @@ var (
 func init() {
 	rootCmd.AddCommand(deployCmd)
 	deployCmd.Flags().BoolVarP(&removeOrphans, "remove-orphans", "r", false, "remove orphan configurations")
-	deployCmd.Flags().StringVarP(&prompt, "prompt", "p", "missing", "prompt for configurations (missing or all)")
+	deployCmd.Flags().StringVarP(&prompt, "prompt", "p", "", "prompt for configurations (missing or all)")
 }
 
 func deploy(cmd *cobra.Command, args []string) error {
 	config, err := loadConfig()
 
-	if prompt != "all" && prompt != "missing" {
+	if prompt != "" && prompt != "all" && prompt != "missing" {
 		return errors.New("value for prompt must be \"all\" or \"missing\"")
 	}
 
@@ -43,19 +43,41 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to load config")
 	}
 
-	store, err := store.GetStore(config.Provider)
+	st, err := store.GetStore(config.Provider)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to instantiate store")
 	}
 
-	for i, c := range config.Configs {
-		if c.Value == "" {
-			config.Configs[i].Value = promptConfig(c)
+	all, _ := st.GetMany(config.Configs)
+	missing := getMissing(config.Configs, all)
+
+	if len(missing) > 0 && prompt == "" {
+		return errors.New("config values missing. run deploy with \"--prompt\" flag")
+	}
+
+	configsToDeploy := []store.ConfigInput{}
+
+	if prompt == "missing" {
+		for _, c := range missing {
+			if c.Value == "" {
+				configsToDeploy = append(configsToDeploy, promptConfig(c))
+			}
 		}
 	}
 
-	err = store.PutMany(config.Configs)
+	if prompt == "all" {
+		for _, c := range config.Configs {
+			if c.Secret {
+				for _, a := range all {
+					c.Value = *a.Value
+				}
+				configsToDeploy = append(configsToDeploy, promptConfig(c))
+			}
+		}
+	}
+
+	err = st.PutMany(configsToDeploy)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to write param")
@@ -64,7 +86,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func promptConfig(config store.ConfigInput) string {
+func promptConfig(config store.ConfigInput) store.ConfigInput {
 	validate := func(input string) error {
 		if len(input) < 1 {
 			return fmt.Errorf("%s must not be empty", config.Name)
@@ -72,12 +94,34 @@ func promptConfig(config store.ConfigInput) string {
 		return nil
 	}
 
+	log.Printf("value %s", config.Value)
+
 	prompt := promptui.Prompt{
 		Label:    config.Name,
 		Validate: validate,
+		Default:  config.Value,
 	}
 
 	result, _ := prompt.Run()
 
-	return result
+	config.Value = result
+
+	return config
+}
+
+func getMissing(a []store.ConfigInput, b []store.Config) []store.ConfigInput {
+	mb := make(map[string]struct{}, len(b))
+
+	for _, x := range b {
+		mb[*x.Name] = struct{}{}
+	}
+
+	var diff []store.ConfigInput
+	for _, x := range a {
+		if _, found := mb[x.Name]; !found {
+			diff = append(diff, x)
+		}
+	}
+
+	return diff
 }

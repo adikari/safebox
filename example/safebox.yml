@@ -3,8 +3,10 @@ provider: ssm
 
 config:
   defaults:
-    DB_NAME: "database name"
+    DB_NAME: "database name updated"
     API_ENDPOINT: "endpoint"
+    NEW: "endpoint"
+    NEW2: "endpoint"
 
   prod:
     DB_NAME: "production db name"
@@ -15,7 +17,7 @@ config:
   shared:
     SHARED_KEY: "shared key"
 
-
 secret:
   API_KEY: "key of the api endpoint"
   DB_SECRET: "database secret"
+  TEST: "database secret"
