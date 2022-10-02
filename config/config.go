@@ -13,6 +13,7 @@ type rawConfig struct {
 	Service  string
 
 	Config map[string]map[string]string
+	Secret map[string]string
 }
 
 type Config struct {
@@ -83,6 +84,14 @@ func parseConfig(rc rawConfig, c *Config, param LoadParam) {
 			Name:   key,
 			Value:  value,
 			Secret: false,
+		})
+	}
+
+	for key, value := range rc.Secret {
+		c.Configs = append(c.Configs, store.ConfigInput{
+			Name:        key,
+			Description: value,
+			Secret:      true,
 		})
 	}
 }

@@ -21,9 +21,10 @@ const (
 )
 
 type ConfigInput struct {
-	Name   string
-	Value  string
-	Secret bool
+	Name        string
+	Value       string
+	Secret      bool
+	Description string
 }
 
 var (

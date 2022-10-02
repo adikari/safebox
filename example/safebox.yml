@@ -16,3 +16,6 @@ config:
     SHARED_KEY: "shared key"
 
 
+secret:
+  API_KEY: "key of the api endpoint"
+  DB_SECRET: "database secret"

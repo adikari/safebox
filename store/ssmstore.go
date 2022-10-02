@@ -58,10 +58,11 @@ func (s *SSMStore) Put(input ConfigInput) error {
 	}
 
 	putParameterInput := &ssm.PutParameterInput{
-		Name:      aws.String(input.Name),
-		Type:      aws.String(configType),
-		Value:     aws.String(input.Value),
-		Overwrite: aws.Bool(true),
+		Name:        aws.String(input.Name),
+		Type:        aws.String(configType),
+		Value:       aws.String(input.Value),
+		Description: aws.String(input.Description),
+		Overwrite:   aws.Bool(true),
 	}
 
 	_, err := s.svc.PutParameter(putParameterInput)

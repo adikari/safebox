@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/adikari/safebox/v2/store"
+	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -22,7 +24,7 @@ var (
 
 func init() {
 	rootCmd.AddCommand(deployCmd)
-	deployCmd.Flags().BoolVarP(&removeOrphans, "remove-orphans", "r", true, "remove orphan configurations")
+	deployCmd.Flags().BoolVarP(&removeOrphans, "remove-orphans", "r", false, "remove orphan configurations")
 	deployCmd.Flags().StringVarP(&prompt, "prompt", "p", "missing", "prompt for configurations (missing or all)")
 }
 
@@ -47,6 +49,12 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to instantiate store")
 	}
 
+	for i, c := range config.Configs {
+		if c.Value == "" {
+			config.Configs[i].Value = promptConfig(c)
+		}
+	}
+
 	err = store.PutMany(config.Configs)
 
 	if err != nil {
@@ -54,4 +62,22 @@ func deploy(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func promptConfig(config store.ConfigInput) string {
+	validate := func(input string) error {
+		if len(input) < 1 {
+			return fmt.Errorf("%s must not be empty", config.Name)
+		}
+		return nil
+	}
+
+	prompt := promptui.Prompt{
+		Label:    config.Name,
+		Validate: validate,
+	}
+
+	result, _ := prompt.Run()
+
+	return result
 }
