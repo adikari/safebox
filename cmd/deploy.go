@@ -93,10 +93,20 @@ func deploy(cmd *cobra.Command, args []string) error {
 
 	// filter configs with changed values
 	for _, c := range config.Configs {
+		found := false
 		for _, a := range all {
-			if c.Name == *a.Name && c.Value != *a.Value {
-				configsToDeploy = append(configsToDeploy, c)
+			if c.Name == *a.Name {
+				found = true
+
+				if c.Value != *a.Value {
+					configsToDeploy = append(configsToDeploy, c)
+				}
+				break
 			}
+		}
+
+		if !found {
+			configsToDeploy = append(configsToDeploy, c)
 		}
 	}
 
@@ -106,7 +116,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to write params")
 	}
 
-	fmt.Printf("%d new configs deployed", len(configsToDeploy))
+	fmt.Printf("%d new configs deployed. service = %s, stage = %s", len(configsToDeploy), config.Service, stage)
 
 	return nil
 }

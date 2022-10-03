@@ -13,7 +13,7 @@ type rawConfig struct {
 	Service  string
 
 	Config map[string]map[string]string
-	Secret map[string]string
+	Secret map[string]map[string]string
 }
 
 type Config struct {
@@ -62,36 +62,41 @@ func Load(param LoadParam) (*Config, error) {
 }
 
 func parseConfig(rc rawConfig, c *Config, param LoadParam) {
-	temp := map[string]string{}
-	c.Configs = []store.ConfigInput{}
-
-	defaultConfig := rc.Config["defaults"]
-	sharedConfig := rc.Config["shared"]
-	envConfig := rc.Config[param.Stage]
-
-	for key, value := range defaultConfig {
-		temp[formatPath(param.Stage, c.Service, key)] = value
-	}
-
-	for key, value := range sharedConfig {
-		temp[formatSharedPath(param.Stage, key)] = value
-	}
-
-	for key, value := range envConfig {
-		temp[formatPath(param.Stage, c.Service, key)] = value
-	}
-
-	for key, value := range temp {
+	for key, value := range rc.Config["defaults"] {
 		c.Configs = append(c.Configs, store.ConfigInput{
-			Name:   key,
+			Name:   formatPath(param.Stage, c.Service, key),
 			Value:  value,
 			Secret: false,
 		})
 	}
 
-	for key, value := range rc.Secret {
+	for key, value := range rc.Config["shared"] {
+		c.Configs = append(c.Configs, store.ConfigInput{
+			Name:   formatSharedPath(param.Stage, key),
+			Value:  value,
+			Secret: false,
+		})
+	}
+
+	for key, value := range rc.Config[param.Stage] {
+		c.Configs = append(c.Configs, store.ConfigInput{
+			Name:   formatPath(param.Stage, c.Service, key),
+			Value:  value,
+			Secret: false,
+		})
+	}
+
+	for key, value := range rc.Secret["defaults"] {
 		c.Secrets = append(c.Secrets, store.ConfigInput{
 			Name:        formatPath(param.Stage, c.Service, key),
+			Description: value,
+			Secret:      true,
+		})
+	}
+
+	for key, value := range rc.Secret["shared"] {
+		c.Secrets = append(c.Secrets, store.ConfigInput{
+			Name:        formatSharedPath(param.Stage, key),
 			Description: value,
 			Secret:      true,
 		})
