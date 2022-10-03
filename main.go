@@ -1,11 +1,13 @@
 package main
 
-import "github.com/adikari/safebox/v2/cmd"
+import (
+	"github.com/adikari/safebox/v2/cmd"
+)
 
 var (
-	Version = "dev"
+	version = "dev"
 )
 
 func main() {
-	cmd.Execute(Version)
+	cmd.Execute(version)
 }
