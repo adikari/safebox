@@ -1,18 +1,21 @@
 service: safebox
 provider: ssm
 
+cloudformation-stacks:
+  - "{{.stage}}-shared-infra-SharedInfraServerless"
+
 config:
   defaults:
     DB_NAME: "database name updated"
-    API_ENDPOINT: "endpoint"
-    NEW: "endpoint"
+    API_ENDPOINT: "{{.authorizerLambaArns}}"
+    NEW: "endpoint-{{.stage}}"
     NEW2: "endpoint updated"
 
   prod:
     DB_NAME: "production db name"
 
   dev:
-    DB_NAME: "dev db name {{.stage}}"
+    DB_NAME: "dev db name"
 
   shared:
     SHARED_KEY: "shared key"

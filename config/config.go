@@ -14,8 +14,9 @@ type rawConfig struct {
 	Provider string
 	Service  string
 
-	Config map[string]map[string]string
-	Secret map[string]map[string]string
+	Config               map[string]map[string]string
+	Secret               map[string]map[string]string
+	CloudformationStacks []string `yaml:"cloudformation-stacks"`
 }
 
 type Config struct {
@@ -24,6 +25,7 @@ type Config struct {
 	All      []store.ConfigInput
 	Configs  []store.ConfigInput
 	Secrets  []store.ConfigInput
+	Stacks   []string
 }
 
 type LoadConfigInput struct {
@@ -58,21 +60,23 @@ func Load(param LoadConfigInput) (*Config, error) {
 		c.Provider = store.SsmProvider
 	}
 
-	parseConfig(rc, &c, param)
-
-	return &c, nil
-}
-
-func parseConfig(rc rawConfig, c *Config, param LoadConfigInput) {
 	variables := map[string]string{
 		"stage":   param.Stage,
 		"service": c.Service,
 	}
 
+	for _, name := range rc.CloudformationStacks {
+		value, err := Interpolate(name, variables)
+		if err != nil {
+			return nil, err
+		}
+		c.Stacks = append(c.Stacks, value)
+	}
+
 	for key, value := range rc.Config["defaults"] {
 		c.Configs = append(c.Configs, store.ConfigInput{
 			Name:   formatPath(param.Stage, c.Service, key),
-			Value:  interpolate(value, variables),
+			Value:  value,
 			Secret: false,
 		})
 	}
@@ -80,7 +84,7 @@ func parseConfig(rc rawConfig, c *Config, param LoadConfigInput) {
 	for key, value := range rc.Config["shared"] {
 		c.Configs = append(c.Configs, store.ConfigInput{
 			Name:   formatSharedPath(param.Stage, key),
-			Value:  interpolate(value, variables),
+			Value:  value,
 			Secret: false,
 		})
 	}
@@ -88,7 +92,7 @@ func parseConfig(rc rawConfig, c *Config, param LoadConfigInput) {
 	for key, value := range rc.Config[param.Stage] {
 		c.Configs = append(c.Configs, store.ConfigInput{
 			Name:   formatPath(param.Stage, c.Service, key),
-			Value:  interpolate(value, variables),
+			Value:  value,
 			Secret: false,
 		})
 	}
@@ -112,6 +116,8 @@ func parseConfig(rc rawConfig, c *Config, param LoadConfigInput) {
 	}
 
 	c.All = append(c.Secrets, c.Configs...)
+
+	return &c, nil
 }
 
 func formatSharedPath(stage string, key string) string {
@@ -122,12 +128,17 @@ func formatPath(stage string, service string, key string) string {
 	return fmt.Sprintf("/%s/%s/%s", stage, service, key)
 }
 
-func interpolate(value string, variables map[string]string) string {
+func Interpolate(value string, variables map[string]string) (string, error) {
 	var result bytes.Buffer
-	tmpl, _ := template.New("interpolate").Parse(value)
+	tmpl, _ := template.New("interpolate").Option("missingkey=error").Parse(value)
 
-	tmpl.Execute(&result, variables)
-	return result.String()
+	err := tmpl.Execute(&result, variables)
+
+	if err != nil {
+		return "", err
+	}
+
+	return result.String(), nil
 }
 
 func removeDuplicate(input []store.ConfigInput) []store.ConfigInput {
