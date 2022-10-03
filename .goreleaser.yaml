@@ -2,6 +2,7 @@ before:
   hooks:
     - go mod tidy
     - go test ./...
+    - ./scripts/completions.sh
 builds:
   - binary: safebox
     env:
@@ -13,6 +14,10 @@ builds:
 
 checksum:
   name_template: 'checksums.txt'
+
+archives:
+  - files:
+      - completions/*
 
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
@@ -32,6 +37,11 @@ brews:
     license: "MIT"
     test: |
       system "#{bin}/safebox --version"
+    install: |
+      bin.install "safebox"
+      bash_completion.install "completions/safebox.bash" => "safebox"
+      zsh_completion.install "completions/safebox.zsh" => "_safebox"
+      fish_completion.install "completions/safebox.fish"
     tap:
       owner: adikari
       name: homebrew-taps
