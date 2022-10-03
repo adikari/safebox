@@ -1,7 +1,9 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 
 	"github.com/adikari/safebox/v2/store"
@@ -24,12 +26,12 @@ type Config struct {
 	Secrets  []store.ConfigInput
 }
 
-type LoadParam struct {
+type LoadConfigInput struct {
 	Path  string
 	Stage string
 }
 
-func Load(param LoadParam) (*Config, error) {
+func Load(param LoadConfigInput) (*Config, error) {
 	yamlFile, err := ioutil.ReadFile(param.Path)
 
 	if err != nil {
@@ -61,11 +63,16 @@ func Load(param LoadParam) (*Config, error) {
 	return &c, nil
 }
 
-func parseConfig(rc rawConfig, c *Config, param LoadParam) {
+func parseConfig(rc rawConfig, c *Config, param LoadConfigInput) {
+	variables := map[string]string{
+		"stage":   param.Stage,
+		"service": c.Service,
+	}
+
 	for key, value := range rc.Config["defaults"] {
 		c.Configs = append(c.Configs, store.ConfigInput{
 			Name:   formatPath(param.Stage, c.Service, key),
-			Value:  value,
+			Value:  interpolate(value, variables),
 			Secret: false,
 		})
 	}
@@ -73,7 +80,7 @@ func parseConfig(rc rawConfig, c *Config, param LoadParam) {
 	for key, value := range rc.Config["shared"] {
 		c.Configs = append(c.Configs, store.ConfigInput{
 			Name:   formatSharedPath(param.Stage, key),
-			Value:  value,
+			Value:  interpolate(value, variables),
 			Secret: false,
 		})
 	}
@@ -81,10 +88,12 @@ func parseConfig(rc rawConfig, c *Config, param LoadParam) {
 	for key, value := range rc.Config[param.Stage] {
 		c.Configs = append(c.Configs, store.ConfigInput{
 			Name:   formatPath(param.Stage, c.Service, key),
-			Value:  value,
+			Value:  interpolate(value, variables),
 			Secret: false,
 		})
 	}
+
+	c.Configs = removeDuplicate(c.Configs)
 
 	for key, value := range rc.Secret["defaults"] {
 		c.Secrets = append(c.Secrets, store.ConfigInput{
@@ -111,4 +120,29 @@ func formatSharedPath(stage string, key string) string {
 
 func formatPath(stage string, service string, key string) string {
 	return fmt.Sprintf("/%s/%s/%s", stage, service, key)
+}
+
+func interpolate(value string, variables map[string]string) string {
+	var result bytes.Buffer
+	tmpl, _ := template.New("interpolate").Parse(value)
+
+	tmpl.Execute(&result, variables)
+	return result.String()
+}
+
+func removeDuplicate(input []store.ConfigInput) []store.ConfigInput {
+	var unique []store.ConfigInput
+
+loop:
+	for _, v := range input {
+		for i, u := range unique {
+			if v.Name == u.Name {
+				unique[i] = v
+				continue loop
+			}
+		}
+		unique = append(unique, v)
+	}
+
+	return unique
 }

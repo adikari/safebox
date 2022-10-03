@@ -44,7 +44,7 @@ func Execute(version string) {
 }
 
 func loadConfig() (*c.Config, error) {
-	params := c.LoadParam{
+	params := c.LoadConfigInput{
 		Path:  pathToConfig,
 		Stage: stage,
 	}

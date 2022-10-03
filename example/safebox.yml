@@ -6,13 +6,13 @@ config:
     DB_NAME: "database name updated"
     API_ENDPOINT: "endpoint"
     NEW: "endpoint"
-    NEW2: "endpoint"
+    NEW2: "endpoint updated"
 
   prod:
     DB_NAME: "production db name"
 
   dev:
-    DB_NAME: "dev db name"
+    DB_NAME: "dev db name {{.stage}}"
 
   shared:
     SHARED_KEY: "shared key"
