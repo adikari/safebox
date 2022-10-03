@@ -47,5 +47,30 @@ brews:
       name: homebrew-taps
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
 
+nfpms:
+  - id: safebox
+    package_name: safebox
+    maintainer: Adikari <me@subash.com.au>
+    description: "A Fast and Flexible secret manager built with love by adikari in Go."
+    license: "MIT"
+    formats:
+      - apk
+      - deb
+      - rpm
+      - termux.deb
+    contents:
+    - src: ./completions/safebox.bash
+      dst: /usr/share/bash-completion/completions/safebox
+      file_info:
+        mode: 0644
+    - src: ./completions/safebox.fish
+      dst: /usr/share/fish/vendor_completions.d/safebox.fish
+      file_info:
+        mode: 0644
+    - src: ./completions/safebox.zsh
+      dst:  /usr/share/zsh/vendor-completions/_safebox
+      file_info:
+        mode: 0644
+
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
