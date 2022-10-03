@@ -44,7 +44,7 @@ func list(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to instantiate store")
 	}
 
-	configs, err := store.GetMany(config.Configs)
+	configs, err := store.GetMany(config.All)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to list params")
@@ -58,6 +58,12 @@ func list(cmd *cobra.Command, args []string) error {
 		sort.Sort(ByName(configs))
 	}
 
+	printList(configs)
+
+	return nil
+}
+
+func printList(configs []store.Config) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
 
 	fmt.Fprint(w, "Name\tValue\tType\tVersion\tLastModified")
@@ -76,8 +82,6 @@ func list(cmd *cobra.Command, args []string) error {
 	}
 
 	w.Flush()
-
-	return nil
 }
 
 type ByName []store.Config

@@ -20,4 +20,3 @@ config:
 secret:
   API_KEY: "key of the api endpoint"
   DB_SECRET: "database secret"
-  TEST: "database secret"

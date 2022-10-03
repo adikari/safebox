@@ -49,8 +49,9 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to instantiate store")
 	}
 
-	all, _ := st.GetMany(config.Configs)
-	missing := getMissing(config.Configs, all)
+	all, _ := st.GetMany(config.All)
+
+	missing := getMissing(config.Secrets, all)
 
 	if len(missing) > 0 && prompt == "" {
 		return errors.New("config values missing. run deploy with \"--prompt\" flag")
@@ -58,6 +59,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 
 	configsToDeploy := []store.ConfigInput{}
 
+	// prompt for missing secrets
 	if prompt == "missing" {
 		for _, c := range missing {
 			if c.Value == "" {
@@ -66,13 +68,30 @@ func deploy(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// prompt for all secrets and provide existing value as default
 	if prompt == "all" {
-		for _, c := range config.Configs {
-			if c.Secret {
-				for _, a := range all {
+		for _, c := range config.Secrets {
+			var existingValue string
+			for _, a := range all {
+				if c.Name == *a.Name {
+					existingValue = *a.Value
 					c.Value = *a.Value
 				}
-				configsToDeploy = append(configsToDeploy, promptConfig(c))
+			}
+
+			userInput := promptConfig(c)
+
+			if userInput.Value != existingValue {
+				configsToDeploy = append(configsToDeploy, userInput)
+			}
+		}
+	}
+
+	// filter configs with changed values
+	for _, c := range config.Configs {
+		for _, a := range all {
+			if c.Name == *a.Name && c.Value != *a.Value {
+				configsToDeploy = append(configsToDeploy, c)
 			}
 		}
 	}
@@ -82,6 +101,8 @@ func deploy(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to write param")
 	}
+
+	fmt.Printf("%d new configs deployed", len(configsToDeploy))
 
 	return nil
 }
@@ -97,7 +118,7 @@ func promptConfig(config store.ConfigInput) store.ConfigInput {
 	log.Printf("value %s", config.Value)
 
 	prompt := promptui.Prompt{
-		Label:    config.Name,
+		Label:    config.Key(),
 		Validate: validate,
 		Default:  config.Value,
 	}

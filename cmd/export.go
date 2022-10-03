@@ -52,7 +52,7 @@ func export(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to instantiate store")
 	}
 
-	toExport, err := configsToExport(config.Configs)
+	toExport, err := configsToExport(config.All)
 
 	if err != nil {
 		return err

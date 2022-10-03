@@ -19,7 +19,9 @@ type rawConfig struct {
 type Config struct {
 	Provider string
 	Service  string
+	All      []store.ConfigInput
 	Configs  []store.ConfigInput
+	Secrets  []store.ConfigInput
 }
 
 type LoadParam struct {
@@ -88,12 +90,14 @@ func parseConfig(rc rawConfig, c *Config, param LoadParam) {
 	}
 
 	for key, value := range rc.Secret {
-		c.Configs = append(c.Configs, store.ConfigInput{
-			Name:        key,
+		c.Secrets = append(c.Secrets, store.ConfigInput{
+			Name:        formatPath(param.Stage, c.Service, key),
 			Description: value,
 			Secret:      true,
 		})
 	}
+
+	c.All = append(c.Secrets, c.Configs...)
 }
 
 func formatSharedPath(stage string, key string) string {
