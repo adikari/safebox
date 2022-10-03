@@ -26,15 +26,16 @@ changelog:
 
 brews:
   - name: safebox
-    tap:
-      owner: adikari
-      name: safebox
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
     folder: Formula
     description: "A Fast and Flexible secret manager built with love by adikari in Go."
     license: "MIT"
     test: |
       system "#{bin}/safebox --version"
+    tap:
+      owner: adikari
+      name: homebrew-taps
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
 
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
