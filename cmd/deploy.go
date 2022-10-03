@@ -49,7 +49,11 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to instantiate store")
 	}
 
-	all, _ := st.GetMany(config.All)
+	all, err := st.GetMany(config.All)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to read existing params")
+	}
 
 	missing := getMissing(config.Secrets, all)
 
@@ -99,7 +103,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 	err = st.PutMany(configsToDeploy)
 
 	if err != nil {
-		return errors.Wrap(err, "failed to write param")
+		return errors.Wrap(err, "failed to write params")
 	}
 
 	fmt.Printf("%d new configs deployed", len(configsToDeploy))
