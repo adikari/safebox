@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/adikari/safebox/v2/cloudformation"
+	conf "github.com/adikari/safebox/v2/config"
 	"github.com/adikari/safebox/v2/store"
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
@@ -41,6 +43,24 @@ func deploy(cmd *cobra.Command, args []string) error {
 
 	if err != nil {
 		return errors.Wrap(err, "failed to load config")
+	}
+
+	variables := map[string]string{
+		"stage":   stage,
+		"service": config.Service,
+	}
+
+	if len(config.Stacks) > 0 {
+		cf := cloudformation.NewCloudformation()
+		outputs, err := cf.GetOutput(config.Stacks[0])
+
+		if err != nil {
+			return errors.Wrap(err, "failed to load outputs")
+		}
+
+		for key, value := range outputs {
+			variables[key] = value
+		}
 	}
 
 	st, err := store.GetStore(config.Provider)
@@ -92,21 +112,29 @@ func deploy(cmd *cobra.Command, args []string) error {
 	}
 
 	// filter configs with changed values
-	for _, c := range config.Configs {
+	for i, c := range config.Configs {
+		co := config.Configs[i]
+		v, err := conf.Interpolate(c.Value, variables)
+
+		if err != nil {
+			return errors.Wrap(err, "failed to interpolate template variables")
+		}
+
+		co.Value = v
 		found := false
 		for _, a := range all {
-			if c.Name == *a.Name {
+			if co.Name == *a.Name {
 				found = true
 
-				if c.Value != *a.Value {
-					configsToDeploy = append(configsToDeploy, c)
+				if co.Value != *a.Value {
+					configsToDeploy = append(configsToDeploy, co)
 				}
 				break
 			}
 		}
 
 		if !found {
-			configsToDeploy = append(configsToDeploy, c)
+			configsToDeploy = append(configsToDeploy, co)
 		}
 	}
 
@@ -128,8 +156,6 @@ func promptConfig(config store.ConfigInput) store.ConfigInput {
 		}
 		return nil
 	}
-
-	log.Printf("value %s", config.Value)
 
 	prompt := promptui.Prompt{
 		Label:    config.Key(),

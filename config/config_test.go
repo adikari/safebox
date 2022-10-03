@@ -3,7 +3,7 @@ package config
 import "testing"
 
 func Test_LoadConfig_InvalidPath(t *testing.T) {
-	_, err := Load(LoadParam{Path: "invalid file"})
+	_, err := Load(LoadConfigInput{Path: "invalid file"})
 	expected := "missing safebox config file invalid file"
 
 	if err.Error() != expected {
