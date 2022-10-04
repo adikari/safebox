@@ -7,30 +7,9 @@ const request = require('request'),
   fs = require('fs'),
   path = require('path'),
   cp = require('child_process'),
-  packageJson = require('./package.json');
+  constants = require('./constants');
 
-// Mapping from Node's `process.arch` to Golang's `$GOARCH`
-const ARCH_MAPPING = {
-  ia32: '386',
-  x64: 'amd64',
-  arm: 'arm',
-  arm64: 'arm64'
-};
-
-// Mapping between Node's `process.platform` to Golang's
-const PLATFORM_MAPPING = {
-  darwin: 'darwin',
-  linux: 'linux',
-  win32: 'windows',
-  freebsd: 'freebsd'
-};
-
-const name = 'safebox';
-const version = packageJson.version;
-const platform = PLATFORM_MAPPING[process.platform];
-const arch = ARCH_MAPPING[process.arch];
-const binaryName = platform === 'win32' ? `${name}.ext` : name;
-const tarUrl = `https://github.com/adikari/safebox/releases/download/v${version}/safebox_${version}_${platform}_${arch}.tar.gz`;
+const { name, platform, arch, binaryName, bin, tarUrl } = constants;
 
 if (!arch) {
   error(`${name} is not supported for this architecture: ${arch}`);
@@ -40,16 +19,9 @@ if (!platform) {
   error(`${name} is not supported for this platform: ${platform}`);
 }
 
-const bin = path.join(__dirname, "bin");
-
 if (!fs.existsSync(bin)){
     fs.mkdirSync(bin);
 }
-
-const error = msg => {
-  console.error(msg);
-  process.exit(1);
-};
 
 const install = () => {
   const tmpdir = os.tmpdir();
