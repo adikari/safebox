@@ -58,11 +58,11 @@ const install = () => {
   const tarFile = `${tmpdir}/${name}.tar.gz`;
   const download = fs.createWriteStream(tarFile);
 
-  console.log(`downloading safebox from ${tarUrl}`);
+  console.log(`downloading safebox binary`);
 
   req.on('response', res => {
     if (res.statusCode !== 200) {
-      error(`Error downloading safebox binary from ${tarUrl}. HTTP Status Code: ${res.statusCode}`);
+      error(`Error downloading safebox binary. HTTP Status Code: ${res.statusCode}`);
     }
 
     req.pipe(download);
