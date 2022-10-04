@@ -34,18 +34,16 @@ const tarUrl = `https://github.com/adikari/safebox/releases/download/v${version}
 
 if (!arch) {
   error(`${name} is not supported for this architecture: ${arch}`);
-  return;
 }
 
 if (!platform) {
   error(`${name} is not supported for this platform: ${platform}`);
-  return;
 }
 
-const nodeBin = path.join(__dirname, "../../.bin")
+const bin = path.join(__dirname, "bin");
 
-if (!fs.existsSync(nodeBin)){
-    fs.mkdirSync(nodeBin);
+if (!fs.existsSync(bin)){
+    fs.mkdirSync(bin);
 }
 
 const error = msg => {
@@ -60,6 +58,8 @@ const install = () => {
   const tarFile = `${tmpdir}/${name}.tar.gz`;
   const download = fs.createWriteStream(tarFile);
 
+  console.log(`downloading safebox from ${tarUrl}`);
+
   req.on('response', res => {
     if (res.statusCode !== 200) {
       error(`Error downloading safebox binary from ${tarUrl}. HTTP Status Code: ${res.statusCode}`);
@@ -70,8 +70,25 @@ const install = () => {
 
   req.on('complete', () => {
     cp.execSync(`tar -xf ${tarFile} -C ${tmpdir}`);
-    fs.copyFileSync(path.join(tmpdir, binaryName), path.join(nodeBin, binaryName));
+    fs.copyFileSync(path.join(tmpdir, binaryName), path.join(bin, binaryName));
   });
 };
 
-install();
+const uninstall = () => {
+  fs.unlinkSync(path.join(bin, binaryName));
+}
+
+let actions = {
+    "install": install,
+    "uninstall": uninstall
+};
+
+let argv = process.argv;
+if (argv && argv.length > 2) {
+    let cmd = process.argv[2];
+    if (!actions[cmd]) {
+        error("Invalid command. `install` and `uninstall` are the only supported commands");
+    }
+
+    actions[cmd]();
+}

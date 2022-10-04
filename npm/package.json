@@ -1,10 +1,12 @@
 {
   "name": "@adikari/safebox",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "A Fast and Flexible secret manager built with love by adikari in Go",
   "main": "index.js",
+  "bin": "./bin/safebox",
   "scripts": {
-    "postinstall": "node install.js"
+    "postinstall": "node install.js install",
+    "preuninstall": "node install.js uninstall"
   },
   "repository": {
     "type": "git",
