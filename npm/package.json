@@ -8,7 +8,8 @@
   },
   "scripts": {
     "postinstall": "node install.js install",
-    "preuninstall": "node install.js uninstall"
+    "preuninstall": "node install.js uninstall",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
