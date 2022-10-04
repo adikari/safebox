@@ -5,7 +5,8 @@
 const request = require('request'),
   os = require('os'),
   fs = require('fs'),
-  exec = require('child_process').exec,
+  path = require('path'),
+  cp = require('child_process'),
   packageJson = require('./package.json');
 
 // Mapping from Node's `process.arch` to Golang's `$GOARCH`
@@ -30,7 +31,8 @@ const platform = process.platform;
 const arch = process.arch;
 const binaryName = platform === 'win32' ? `${name}.ext` : name;
 const tarUrl = `https://github.com/adikari/safebox/releases/download/v${version}/safebox_${version}_${platform}_${arch}.tar.gz`;
-const nodeModulesBin = './node_modules/.bin';
+
+const nodeBin = cp.execSync("npm bin").toString().replace(/\r?\n|\r/g, "");
 
 const error = msg => {
   console.error(msg);
@@ -47,14 +49,6 @@ if (!(platform in PLATFORM_MAPPING)) {
   return;
 }
 
-const ensureDir = dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir);
-  }
-
-  return dir;
-};
-
 const install = () => {
   const tmpdir = os.tmpdir();
   const req = request({ uri: tarUrl });
@@ -64,20 +58,15 @@ const install = () => {
 
   req.on('response', res => {
     if (res.statusCode !== 200) {
-      return callback('Error downloading safebox binary. HTTP Status Code: ' + res.statusCode);
+      return callback(`Error downloading safebox binary. HTTP Status Code: ${res.statusCode}`);
     }
 
     req.pipe(download);
   });
 
   req.on('complete', () => {
-    exec(`tar -xf ${tarFile} -C ${tmpdir}`, error => {
-      if (error) {
-        error(`error: ${error.message}`);
-      }
-      const dest = ensureDir(nodeModulesBin);
-      fs.copyFileSync(`${tmpdir}/${binaryName}`, `${dest}/${binaryName}`);
-    });
+    cp.execSync(`tar -xf ${tarFile} -C ${tmpdir}`);
+    fs.copyFileSync(path.join(tmpdir, binaryName), path.join(nodeBin, binaryName));
   });
 };
 
