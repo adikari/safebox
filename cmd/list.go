@@ -64,6 +64,11 @@ func list(cmd *cobra.Command, args []string) error {
 }
 
 func printList(configs []store.Config) {
+	if len(configs) <= 0 {
+		fmt.Print("no configurations to list")
+		return
+	}
+
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 2, '\t', 0)
 
 	fmt.Fprint(w, "Name\tValue\tType\tVersion\tLastModified")

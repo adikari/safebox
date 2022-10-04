@@ -94,6 +94,10 @@ func (s *SSMStore) Delete(config ConfigInput) error {
 }
 
 func (s *SSMStore) GetMany(configs []ConfigInput) ([]Config, error) {
+	if len(configs) <= 0 {
+		return []Config{}, nil
+	}
+
 	getParametersInput := &ssm.GetParametersInput{
 		Names:          getNames(configs),
 		WithDecryption: aws.Bool(true),

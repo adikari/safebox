@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 
 	"github.com/adikari/safebox/v2/store"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
@@ -48,8 +49,10 @@ func Load(param LoadConfigInput) (*Config, error) {
 		return nil, fmt.Errorf("could not parse safebox config file %s", param.Path)
 	}
 
-	if rc.Service == "" {
-		return nil, fmt.Errorf("'service' missing in config file%s", param.Path)
+	err = validateConfig(rc)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "invalid configuration")
 	}
 
 	c := Config{}
@@ -126,6 +129,18 @@ func formatSharedPath(stage string, key string) string {
 
 func formatPath(stage string, service string, key string) string {
 	return fmt.Sprintf("/%s/%s/%s", stage, service, key)
+}
+
+func validateConfig(rc rawConfig) error {
+	if rc.Service == "" {
+		return fmt.Errorf("'service' is missing")
+	}
+
+	if rc.Provider == "" {
+		return fmt.Errorf("'provider' is missing")
+	}
+
+	return nil
 }
 
 func Interpolate(value string, variables map[string]string) (string, error) {
