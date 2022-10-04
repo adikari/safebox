@@ -5,14 +5,18 @@
 # option. This file may not be copied, modified, or distributed
 # except according to those terms.
 
-# Example to bypass binary overwrite [y/N] prompt
 # curl -sSL https://raw.githubusercontent.com/adikari/safebox/main/scripts/install.sh | sh
 
 set -u
 
-BINARY_DOWNLOAD_PREFIX="https://github.com/adikari/safebox/releases/download"
+get_latest_release() {
+  curl --silent "https://api.github.com/repos/$1/releases/latest" |
+    grep '"tag_name":' |
+    sed -E 's/.*"([^"]+)".*/\1/'
+}
 
-PACKAGE_VERSION="1.0.1"
+BINARY_DOWNLOAD_PREFIX="https://github.com/adikari/safebox/releases/download"
+PACKAGE_VERSION=$(get_latest_release adikari/safebox)
 
 download_binary_and_run_installer() {
     downloader --check
@@ -39,8 +43,8 @@ download_binary_and_run_installer() {
     esac
 
 		local _current_dir=$(pwd)
-    local _tardir="safebox_$PACKAGE_VERSION"_"${_arch}"
-    local _url="$BINARY_DOWNLOAD_PREFIX/v$PACKAGE_VERSION/${_tardir}.tar.gz"
+    local _tardir="safebox_${PACKAGE_VERSION:1}"_"${_arch}"
+    local _url="$BINARY_DOWNLOAD_PREFIX/$PACKAGE_VERSION/${_tardir}.tar.gz"
     local _dir="$(mktemp -d 2>/dev/null || ensure mktemp -d -t test)"
     local _file="$_dir/input.tar.gz"
     local _safebox="$_dir/safebox$_ext"
