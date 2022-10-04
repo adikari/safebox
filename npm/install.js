@@ -27,27 +27,31 @@ const PLATFORM_MAPPING = {
 
 const name = 'safebox';
 const version = packageJson.version;
-const platform = process.platform;
-const arch = process.arch;
+const platform = PLATFORM_MAPPING[process.platform];
+const arch = ARCH_MAPPING[process.arch];
 const binaryName = platform === 'win32' ? `${name}.ext` : name;
 const tarUrl = `https://github.com/adikari/safebox/releases/download/v${version}/safebox_${version}_${platform}_${arch}.tar.gz`;
 
-const nodeBin = cp.execSync("npm bin").toString().replace(/\r?\n|\r/g, "");
+if (!arch) {
+  error(`${name} is not supported for this architecture: ${arch}`);
+  return;
+}
+
+if (!platform) {
+  error(`${name} is not supported for this platform: ${platform}`);
+  return;
+}
+
+const nodeBin = path.join(__dirname, "../../.bin")
+
+if (!fs.existsSync(nodeBin)){
+    fs.mkdirSync(nodeBin);
+}
 
 const error = msg => {
   console.error(msg);
   process.exit(1);
 };
-
-if (!(arch in ARCH_MAPPING)) {
-  error(`${name} is not supported for this architecture: ${arch}`);
-  return;
-}
-
-if (!(platform in PLATFORM_MAPPING)) {
-  error(`${name} is not supported for this platform: ${platform}`);
-  return;
-}
 
 const install = () => {
   const tmpdir = os.tmpdir();
@@ -58,7 +62,7 @@ const install = () => {
 
   req.on('response', res => {
     if (res.statusCode !== 200) {
-      return callback(`Error downloading safebox binary. HTTP Status Code: ${res.statusCode}`);
+      error(`Error downloading safebox binary from ${tarUrl}. HTTP Status Code: ${res.statusCode}`);
     }
 
     req.pipe(download);
