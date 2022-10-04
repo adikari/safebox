@@ -12,6 +12,12 @@ $ brew install adikari/taps/safebox
 
 # Via curl
 $ curl -sSL https://raw.githubusercontent.com/adikari/safebox/main/scripts/install.sh | sh
+
+# Via npm
+$ npm install @adikari/safebox
+
+# Via yarn
+$ yarn add @adikari/safebox
 ```
 
 To install it directly find the right version for your machine in [releases](https://github.com/adikari/safebox/releases) page. Download and un-archive the files. Copy the `safebox` binary to the PATH or use it directly.
