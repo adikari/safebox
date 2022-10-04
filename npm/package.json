@@ -12,11 +12,6 @@
   },
   "author": "Subash Adhikari <me@subash.com.au>",
   "license": "MIT",
-  "goBinary": {
-    "name": "safebox",
-    "path": "./bin",
-    "url": "https://github.com/adikari/safebox/releases/download/v{{version}}/safebox_{{version}}_{{platform}}_{{arch}}.tar.gz"
-  },
   "homepage": "https://github.com/adikari/safebox",
   "dependencies": {
     "request": "^2.88.2"
