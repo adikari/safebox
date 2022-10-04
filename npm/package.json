@@ -4,7 +4,7 @@
   "description": "A Fast and Flexible secret manager built with love by adikari in Go",
   "main": "index.js",
   "scripts": {
-    "postinstall": "node postinstall.js"
+    "postinstall": "node install.js"
   },
   "repository": {
     "type": "git",
@@ -14,11 +14,11 @@
   "license": "MIT",
   "goBinary": {
     "name": "safebox",
-    "path": "./bin"
+    "path": "./bin",
+    "url": "https://github.com/adikari/safebox/releases/download/v{{version}}/safebox_{{version}}_{{platform}}_{{arch}}.tar.gz"
   },
   "homepage": "https://github.com/adikari/safebox",
-  "files": [
-    "dist",
-    "scripts/postinstall.js"
-  ]
+  "dependencies": {
+    "request": "^2.88.2"
+  }
 }
