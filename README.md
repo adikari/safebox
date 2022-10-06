@@ -6,7 +6,7 @@ SafeBox is a command line tool for managing secrets for your application. Curren
 
 SafeBox is available for many Linux distros and Windows.
 
-```
+```bash
 # Via brew (OSX)
 $ brew install adikari/taps/safebox
 
@@ -26,7 +26,7 @@ To install it directly find the right version for your machine in [releases](htt
 
 1. Create a configuration file called `safebox.yml`.
 
-```
+```yaml
 service: my-service
 provider: ssm
 
@@ -52,7 +52,7 @@ secret:
 
 2. Use `safebox` CLI tool to deploy your configuration.
 
-```
+```bash
 $ safebox deploy --stage <stage> --config path/to/safebox.yml --prompt missing
 ```
 
@@ -66,7 +66,7 @@ The variables under
 
 Following is the configuration file will all possible options:
 
-```
+```yaml
 service: my-service
 provider: ssm                                 # Only supports ssm for now.
 
@@ -91,7 +91,7 @@ secret:
 
 Following is all options available in `safebox` CLI.
 
-```
+```bash
 A Fast and Flexible secret manager built with love by adikari in Go.
 
 Usage:
@@ -117,7 +117,7 @@ Use "safebox [command] --help" for more information about a command.
 
 ### Using in scripts
 
-```
+```bash
 #!/bin/bash
 
 set -euo pipefail
