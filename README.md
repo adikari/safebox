@@ -115,6 +115,25 @@ Flags:
 Use "safebox [command] --help" for more information about a command.
 ```
 
+### Using in scripts
+
+```
+#!/bin/bash
+
+set -euo pipefail
+
+echo "📦  deploying configs to ssm"
+yarn safebox deploy --stage $STAGE # ensures all configs are deployed. throws error if ay configs are missings
+
+configs=$(yarn safebox export --stage $STAGE)
+CONFIG1=$(echo "$configs" | jq -r ".CONFIG1")
+CONFIG2=$(echo "$configs" | jq -r '.CONFIG2')
+
+echo $CONFIG1
+echo $CONFIG2
+
+```
+
 ### License
 
 Feel free to use the code, it's released using the MIT license.
