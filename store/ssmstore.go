@@ -3,6 +3,7 @@ package store
 import (
 	"strings"
 
+	"github.com/adikari/safebox/v2/util"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -120,7 +121,7 @@ func (s *SSMStore) GetMany(configs []ConfigInput) ([]Config, error) {
 	}
 
 	var params []Config
-	for _, chunk := range chunk(configs, 10) {
+	for _, chunk := range util.ChunkSlice(configs, 10) {
 		p, err := get(chunk)
 
 		if err != nil {
@@ -177,19 +178,4 @@ func getNames(configs []ConfigInput) []*string {
 	}
 
 	return names
-}
-
-func chunk(slice []ConfigInput, chunkSize int) [][]ConfigInput {
-	var chunks [][]ConfigInput
-	for i := 0; i < len(slice); i += chunkSize {
-		end := i + chunkSize
-
-		if end > len(slice) {
-			end = len(slice)
-		}
-
-		chunks = append(chunks, slice[i:end])
-	}
-
-	return chunks
 }

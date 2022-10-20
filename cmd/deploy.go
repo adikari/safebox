@@ -144,8 +144,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to write params")
 	}
 
-	fmt.Printf("%d new configs deployed. service = %s, stage = %s", len(configsToDeploy), config.Service, stage)
-	fmt.Printf("")
+	fmt.Printf("%d new configs deployed. service = %s, stage = %s\n", len(configsToDeploy), config.Service, stage)
 
 	return nil
 }
