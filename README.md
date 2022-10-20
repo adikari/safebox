@@ -134,6 +134,14 @@ echo $CONFIG2
 
 ```
 
+### Release
+
+1. Update version number [npm/package.json](https://github.com/adikari/safebox/blob/main/npm/package.json)
+2. Create a git tag that matches the same version number as npm package version.
+3. Push the tag to github and create a Pull request. Tag must follow semversion and prefixed with `v`. Eg. `v.1.2.3`
+4. Merging the Pull Request triggers github workflow that will automatically release new version
+
+
 ### License
 
 Feel free to use the code, it's released using the MIT license.
