@@ -3,6 +3,7 @@ package store
 import (
 	"strings"
 
+	"github.com/adikari/safebox/v2/util"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -98,21 +99,36 @@ func (s *SSMStore) GetMany(configs []ConfigInput) ([]Config, error) {
 		return []Config{}, nil
 	}
 
-	getParametersInput := &ssm.GetParametersInput{
-		Names:          getNames(configs),
-		WithDecryption: aws.Bool(true),
-	}
+	get := func(c []ConfigInput) ([]Config, error) {
+		var res []Config
 
-	resp, err := s.svc.GetParameters(getParametersInput)
+		getParametersInput := &ssm.GetParametersInput{
+			Names:          getNames(c),
+			WithDecryption: aws.Bool(true),
+		}
 
-	if err != nil {
-		return []Config{}, err
+		resp, err := s.svc.GetParameters(getParametersInput)
+
+		if err != nil {
+			return []Config{}, err
+		}
+
+		for _, param := range resp.Parameters {
+			res = append(res, parameterToConfig(param))
+		}
+
+		return res, nil
 	}
 
 	var params []Config
+	for _, chunk := range util.ChunkSlice(configs, 10) {
+		p, err := get(chunk)
 
-	for _, param := range resp.Parameters {
-		params = append(params, parameterToConfig(param))
+		if err != nil {
+			return []Config{}, err
+		}
+
+		params = append(params, p...)
 	}
 
 	return params, nil

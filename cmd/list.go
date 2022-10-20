@@ -86,6 +86,10 @@ func printList(configs []store.Config) {
 		fmt.Fprintln(w, "")
 	}
 
+	fmt.Fprintln(w, "---")
+	fmt.Fprintf(w, "Total parameters = %d", len(configs))
+	fmt.Fprintln(w, "")
+
 	w.Flush()
 }
 
