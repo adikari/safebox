@@ -145,6 +145,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("%d new configs deployed. service = %s, stage = %s", len(configsToDeploy), config.Service, stage)
+	fmt.Printf("")
 
 	return nil
 }
