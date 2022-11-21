@@ -37,10 +37,6 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.New("value for prompt must be \"all\" or \"missing\"")
 	}
 
-	if removeOrphans {
-		log.Panic("remove orphans flag is not implemented")
-	}
-
 	if err != nil {
 		return errors.Wrap(err, "failed to load config")
 	}
@@ -144,9 +140,18 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to write params")
 	}
 
+	if removeOrphans {
+		cleanOrphan(config.Prefix)
+	}
+
 	fmt.Printf("%d new configs deployed. service = %s, stage = %s\n", len(configsToDeploy), config.Service, stage)
 
 	return nil
+}
+
+func cleanOrphan(prefix string) {
+	log.Printf("prefix - %s", prefix)
+	log.Panic("remove orphans flag is not implemented")
 }
 
 func promptConfig(config store.ConfigInput) store.ConfigInput {

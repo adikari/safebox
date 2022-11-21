@@ -23,6 +23,7 @@ type rawConfig struct {
 type Config struct {
 	Provider string
 	Service  string
+	Prefix   string
 	All      []store.ConfigInput
 	Configs  []store.ConfigInput
 	Secrets  []store.ConfigInput
@@ -58,6 +59,7 @@ func Load(param LoadConfigInput) (*Config, error) {
 	c := Config{}
 	c.Service = rc.Service
 	c.Provider = rc.Provider
+	c.Prefix = getPrefix(param.Stage, c.Service)
 
 	if c.Provider == "" {
 		c.Provider = store.SsmProvider
@@ -78,7 +80,7 @@ func Load(param LoadConfigInput) (*Config, error) {
 
 	for key, value := range rc.Config["defaults"] {
 		c.Configs = append(c.Configs, store.ConfigInput{
-			Name:   formatPath(param.Stage, c.Service, key),
+			Name:   formatPath(c.Prefix, key),
 			Value:  value,
 			Secret: false,
 		})
@@ -94,7 +96,7 @@ func Load(param LoadConfigInput) (*Config, error) {
 
 	for key, value := range rc.Config[param.Stage] {
 		c.Configs = append(c.Configs, store.ConfigInput{
-			Name:   formatPath(param.Stage, c.Service, key),
+			Name:   formatPath(c.Prefix, key),
 			Value:  value,
 			Secret: false,
 		})
@@ -104,7 +106,7 @@ func Load(param LoadConfigInput) (*Config, error) {
 
 	for key, value := range rc.Secret["defaults"] {
 		c.Secrets = append(c.Secrets, store.ConfigInput{
-			Name:        formatPath(param.Stage, c.Service, key),
+			Name:        formatPath(c.Prefix, key),
 			Description: value,
 			Secret:      true,
 		})
@@ -127,8 +129,12 @@ func formatSharedPath(stage string, key string) string {
 	return fmt.Sprintf("/%s/shared/%s", stage, key)
 }
 
-func formatPath(stage string, service string, key string) string {
-	return fmt.Sprintf("/%s/%s/%s", stage, service, key)
+func formatPath(prefix string, key string) string {
+	return fmt.Sprintf("%s%s", prefix, key)
+}
+
+func getPrefix(stage string, service string) string {
+	return fmt.Sprintf("/%s/%s/", stage, service)
 }
 
 func validateConfig(rc rawConfig) error {
