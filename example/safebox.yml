@@ -11,7 +11,6 @@ config:
     NEW: "endpoint-{{.stage}}"
     NEW5: "endpoint updated"
     NEW6: "endpoint updated"
-    NEW7: "endpoint updated"
 
   prod:
     DB_NAME: "production db name"

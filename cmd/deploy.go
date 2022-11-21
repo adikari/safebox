@@ -154,9 +154,9 @@ func deploy(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func doRemoveOrphans(store store.Store, prefix string, all []store.ConfigInput) ([]string, error) {
-	var orphans []string
-	params, err := store.GetByPath(prefix)
+func doRemoveOrphans(st store.Store, prefix string, all []store.ConfigInput) ([]store.ConfigInput, error) {
+	var orphans []store.ConfigInput
+	params, err := st.GetByPath(prefix)
 
 	if err != nil {
 		return nil, err
@@ -173,8 +173,14 @@ func doRemoveOrphans(store store.Store, prefix string, all []store.ConfigInput) 
 		}
 
 		if !exists {
-			orphans = append(orphans, *param.Name)
+			orphans = append(orphans, store.ConfigInput{Name: *param.Name})
 		}
+	}
+
+	err = st.DeleteMany(orphans)
+
+	if err != nil {
+		return nil, err
 	}
 
 	return orphans, nil

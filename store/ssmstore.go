@@ -94,6 +94,22 @@ func (s *SSMStore) Delete(config ConfigInput) error {
 	return nil
 }
 
+func (s *SSMStore) DeleteMany(configs []ConfigInput) error {
+	if len(configs) <= 0 {
+		return nil
+	}
+
+	for _, config := range configs {
+		err := s.Delete(config)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *SSMStore) GetMany(configs []ConfigInput) ([]Config, error) {
 	if len(configs) <= 0 {
 		return []Config{}, nil

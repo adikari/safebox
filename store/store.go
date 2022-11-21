@@ -38,6 +38,7 @@ type Store interface {
 	GetMany(configs []ConfigInput) ([]Config, error)
 	GetByPath(path string) ([]Config, error)
 	Delete(config ConfigInput) error
+	DeleteMany(configs []ConfigInput) error
 }
 
 func GetStore(provider string) (Store, error) {
