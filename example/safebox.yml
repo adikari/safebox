@@ -9,12 +9,8 @@ config:
     DB_NAME: "database name updated"
     API_ENDPOINT: "{{.internalDomainName}}"
     NEW: "endpoint-{{.stage}}"
-    NEW2: "endpoint updated"
-    NEW3: "endpoint updated"
-    NEW4: "endpoint updated"
     NEW5: "endpoint updated"
     NEW6: "endpoint updated"
-    NEW7: "endpoint updated"
 
   prod:
     DB_NAME: "production db name"

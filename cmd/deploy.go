@@ -37,10 +37,6 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.New("value for prompt must be \"all\" or \"missing\"")
 	}
 
-	if removeOrphans {
-		log.Panic("remove orphans flag is not implemented")
-	}
-
 	if err != nil {
 		return errors.Wrap(err, "failed to load config")
 	}
@@ -144,9 +140,50 @@ func deploy(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to write params")
 	}
 
+	if removeOrphans {
+		orphans, err := doRemoveOrphans(st, config.Prefix, config.All)
+		if err != nil {
+			log.Print("failed to remove orphans")
+		}
+
+		fmt.Printf("%d orphans removed.\n", len(orphans))
+	}
+
 	fmt.Printf("%d new configs deployed. service = %s, stage = %s\n", len(configsToDeploy), config.Service, stage)
 
 	return nil
+}
+
+func doRemoveOrphans(st store.Store, prefix string, all []store.ConfigInput) ([]store.ConfigInput, error) {
+	var orphans []store.ConfigInput
+	params, err := st.GetByPath(prefix)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, param := range params {
+		exists := false
+
+		for _, config := range all {
+			if config.Name == *param.Name {
+				exists = true
+				break
+			}
+		}
+
+		if !exists {
+			orphans = append(orphans, store.ConfigInput{Name: *param.Name})
+		}
+	}
+
+	err = st.DeleteMany(orphans)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return orphans, nil
 }
 
 func promptConfig(config store.ConfigInput) store.ConfigInput {
