@@ -3,10 +3,10 @@ package store
 import (
 	"strings"
 
+	a "github.com/adikari/safebox/v2/aws"
 	"github.com/adikari/safebox/v2/util"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
 )
@@ -18,21 +18,23 @@ var (
 	throttleDelay   = client.DefaultRetryerMinRetryDelay
 )
 
+var svc *ssm.SSM
+
 type SSMStore struct {
 	svc ssmiface.SSMAPI
 }
 
 func NewSSMStore() (*SSMStore, error) {
-	ssmSession := session.Must(session.NewSession())
+	if svc == nil {
+		retryer := client.DefaultRetryer{
+			NumMaxRetries:    numberOfRetries,
+			MinThrottleDelay: throttleDelay,
+		}
 
-	retryer := client.DefaultRetryer{
-		NumMaxRetries:    numberOfRetries,
-		MinThrottleDelay: throttleDelay,
+		svc = ssm.New(a.Session, &aws.Config{
+			Retryer: retryer,
+		})
 	}
-
-	svc := ssm.New(ssmSession, &aws.Config{
-		Retryer: retryer,
-	})
 
 	return &SSMStore{
 		svc: svc,

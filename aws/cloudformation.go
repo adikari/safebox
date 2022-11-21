@@ -1,11 +1,10 @@
-package cloudformation
+package aws
 
 import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 )
 
@@ -13,6 +12,8 @@ var (
 	numberOfRetries = 10
 	throttleDelay   = client.DefaultRetryerMinRetryDelay
 )
+
+var cfClient *cloudformation.CloudFormation
 
 type Cloudformation struct {
 	client *cloudformation.CloudFormation
@@ -39,16 +40,16 @@ func (c *Cloudformation) GetOutput(stackname string) (map[string]string, error) 
 }
 
 func NewCloudformation() Cloudformation {
-	cfSession := session.Must(session.NewSession())
+	if cfClient == nil {
+		retryer := client.DefaultRetryer{
+			NumMaxRetries:    numberOfRetries,
+			MinThrottleDelay: throttleDelay,
+		}
 
-	retryer := client.DefaultRetryer{
-		NumMaxRetries:    numberOfRetries,
-		MinThrottleDelay: throttleDelay,
+		cfClient = cloudformation.New(Session, &aws.Config{
+			Retryer: retryer,
+		})
 	}
 
-	c := cloudformation.New(cfSession, &aws.Config{
-		Retryer: retryer,
-	})
-
-	return Cloudformation{client: c}
+	return Cloudformation{client: cfClient}
 }

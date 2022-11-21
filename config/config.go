@@ -6,7 +6,7 @@ import (
 	"html/template"
 	"io/ioutil"
 
-	"github.com/adikari/safebox/v2/cloudformation"
+	"github.com/adikari/safebox/v2/aws"
 	"github.com/adikari/safebox/v2/store"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -152,12 +152,19 @@ func validateConfig(rc rawConfig) error {
 }
 
 func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
+	st := aws.NewSts()
+
+	id, err := st.GetCallerIdentity()
+
+	if err != nil {
+		return nil, err
+	}
 
 	variables := map[string]string{
 		"stage":   c.Stage,
 		"service": c.Service,
-		"region":  "123",
-		"account": "abc",
+		"region":  *aws.Session.Config.Region,
+		"account": *id.Account,
 	}
 
 	for _, name := range rc.CloudformationStacks {
@@ -170,7 +177,7 @@ func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
 
 	// add cloudformation outputs to variables available for interpolation
 	if len(c.Stacks) > 0 {
-		cf := cloudformation.NewCloudformation()
+		cf := aws.NewCloudformation()
 		// TODO: support multiple cf stack outputs
 		outputs, err := cf.GetOutput(c.Stacks[0])
 
