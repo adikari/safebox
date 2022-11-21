@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io/ioutil"
 
+	"github.com/adikari/safebox/v2/aws"
 	"github.com/adikari/safebox/v2/store"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -23,6 +24,7 @@ type rawConfig struct {
 type Config struct {
 	Provider string
 	Service  string
+	Stage    string
 	Prefix   string
 	All      []store.ConfigInput
 	Configs  []store.ConfigInput
@@ -58,6 +60,7 @@ func Load(param LoadConfigInput) (*Config, error) {
 
 	c := Config{}
 	c.Service = rc.Service
+	c.Stage = param.Stage
 	c.Provider = rc.Provider
 	c.Prefix = getPrefix(param.Stage, c.Service)
 
@@ -65,23 +68,22 @@ func Load(param LoadConfigInput) (*Config, error) {
 		c.Provider = store.SsmProvider
 	}
 
-	variables := map[string]string{
-		"stage":   param.Stage,
-		"service": c.Service,
-	}
+	variables, err := loadVariables(c, rc)
 
-	for _, name := range rc.CloudformationStacks {
-		value, err := Interpolate(name, variables)
-		if err != nil {
-			return nil, err
-		}
-		c.Stacks = append(c.Stacks, value)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to variables for interpolation")
 	}
 
 	for key, value := range rc.Config["defaults"] {
+		val, err := Interpolate(value, variables)
+
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to interpolate template variables")
+		}
+
 		c.Configs = append(c.Configs, store.ConfigInput{
 			Name:   formatPath(c.Prefix, key),
-			Value:  value,
+			Value:  val,
 			Secret: false,
 		})
 	}
@@ -147,6 +149,48 @@ func validateConfig(rc rawConfig) error {
 	}
 
 	return nil
+}
+
+func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
+	st := aws.NewSts()
+
+	id, err := st.GetCallerIdentity()
+
+	if err != nil {
+		return nil, err
+	}
+
+	variables := map[string]string{
+		"stage":   c.Stage,
+		"service": c.Service,
+		"region":  *aws.Session.Config.Region,
+		"account": *id.Account,
+	}
+
+	for _, name := range rc.CloudformationStacks {
+		value, err := Interpolate(name, variables)
+		if err != nil {
+			return nil, err
+		}
+		c.Stacks = append(c.Stacks, value)
+	}
+
+	// add cloudformation outputs to variables available for interpolation
+	if len(c.Stacks) > 0 {
+		cf := aws.NewCloudformation()
+		// TODO: support multiple cf stack outputs
+		outputs, err := cf.GetOutput(c.Stacks[0])
+
+		if err != nil {
+			return nil, err
+		}
+
+		for key, value := range outputs {
+			variables[key] = value
+		}
+	}
+
+	return variables, nil
 }
 
 func Interpolate(value string, variables map[string]string) (string, error) {

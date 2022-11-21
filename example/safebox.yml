@@ -9,8 +9,12 @@ config:
     DB_NAME: "database name updated"
     API_ENDPOINT: "{{.internalDomainName}}"
     NEW: "endpoint-{{.stage}}"
-    NEW5: "endpoint updated"
+    NEW2: "endpoint updated"
+    NEW3: "endpoint updated"
+    AWS_REGION: "{{.region}}"
+    AWS_ACCOUNT: "{{.account}}"
     NEW6: "endpoint updated"
+    NEW7: "endpoint updated"
 
   prod:
     DB_NAME: "production db name"
