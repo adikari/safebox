@@ -36,6 +36,7 @@ type Store interface {
 	PutMany(input []ConfigInput) error
 	Get(config ConfigInput) (Config, error)
 	GetMany(configs []ConfigInput) ([]Config, error)
+	GetByPath(path string) ([]Config, error)
 	Delete(config ConfigInput) error
 }
 

@@ -141,7 +141,12 @@ func deploy(cmd *cobra.Command, args []string) error {
 	}
 
 	if removeOrphans {
-		cleanOrphan(config.Prefix)
+		orphans, err := doRemoveOrphans(st, config.Prefix, config.All)
+		if err != nil {
+			log.Print("failed to remove orphans")
+		}
+
+		fmt.Printf("%d orphans removed.\n", len(orphans))
 	}
 
 	fmt.Printf("%d new configs deployed. service = %s, stage = %s\n", len(configsToDeploy), config.Service, stage)
@@ -149,9 +154,30 @@ func deploy(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func cleanOrphan(prefix string) {
-	log.Printf("prefix - %s", prefix)
-	log.Panic("remove orphans flag is not implemented")
+func doRemoveOrphans(store store.Store, prefix string, all []store.ConfigInput) ([]string, error) {
+	var orphans []string
+	params, err := store.GetByPath(prefix)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, param := range params {
+		exists := false
+
+		for _, config := range all {
+			if config.Name == *param.Name {
+				exists = true
+				break
+			}
+		}
+
+		if !exists {
+			orphans = append(orphans, *param.Name)
+		}
+	}
+
+	return orphans, nil
 }
 
 func promptConfig(config store.ConfigInput) store.ConfigInput {

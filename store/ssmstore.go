@@ -100,7 +100,7 @@ func (s *SSMStore) GetMany(configs []ConfigInput) ([]Config, error) {
 	}
 
 	get := func(c []ConfigInput) ([]Config, error) {
-		var res []Config
+		var result []Config
 
 		getParametersInput := &ssm.GetParametersInput{
 			Names:          getNames(c),
@@ -114,10 +114,10 @@ func (s *SSMStore) GetMany(configs []ConfigInput) ([]Config, error) {
 		}
 
 		for _, param := range resp.Parameters {
-			res = append(res, parameterToConfig(param))
+			result = append(result, parameterToConfig(param))
 		}
 
-		return res, nil
+		return result, nil
 	}
 
 	var params []Config
@@ -142,6 +142,37 @@ func (s *SSMStore) Get(config ConfigInput) (Config, error) {
 	}
 
 	return configs[0], nil
+}
+
+func (s *SSMStore) GetByPath(path string) ([]Config, error) {
+	var result []Config
+
+	input := &ssm.GetParametersByPathInput{
+		Path:           aws.String(path),
+		WithDecryption: aws.Bool(true),
+	}
+
+	var recursiveGet func()
+	recursiveGet = func() {
+		resp, err := s.svc.GetParametersByPath(input)
+
+		if err != nil {
+			return
+		}
+
+		for _, param := range resp.Parameters {
+			result = append(result, parameterToConfig(param))
+		}
+
+		if resp.NextToken != nil {
+			input.NextToken = resp.NextToken
+			recursiveGet()
+		}
+	}
+
+	recursiveGet()
+
+	return result, nil
 }
 
 func basePath(key string) string {
