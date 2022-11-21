@@ -178,8 +178,7 @@ func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
 	// add cloudformation outputs to variables available for interpolation
 	if len(c.Stacks) > 0 {
 		cf := aws.NewCloudformation()
-		// TODO: support multiple cf stack outputs
-		outputs, err := cf.GetOutput(c.Stacks[0])
+		outputs, err := cf.GetOutputs(c.Stacks)
 
 		if err != nil {
 			return nil, err
