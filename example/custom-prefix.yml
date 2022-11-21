@@ -1,0 +1,23 @@
+service: safebox
+provider: ssm
+
+prefix: "{{.stage}}/custom/prefix/{{.service}}"
+
+cloudformation-stacks:
+  - "{{.stage}}-shared-infra-SharedInfraServerless"
+
+config:
+  defaults:
+    DB_NAME: "database name updated"
+    CF_OUTPUT_API_ENDPOINT: "{{.internalDomainName}}"
+    AWS_ACCOUNT: "{{.account}}"
+
+  shared:
+    SHARED_KEY: "shared key"
+
+secret:
+  defaults:
+    API_KEY: "key of the api endpoint"
+
+  shared:
+    APOLLO_KEY: "apollo key"
