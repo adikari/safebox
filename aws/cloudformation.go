@@ -39,6 +39,24 @@ func (c *Cloudformation) GetOutput(stackname string) (map[string]string, error) 
 	return result, nil
 }
 
+func (c *Cloudformation) GetOutputs(stacknames []string) (map[string]string, error) {
+	result := map[string]string{}
+
+	for _, stackname := range stacknames {
+		outputs, err := c.GetOutput(stackname)
+
+		if err != nil {
+			continue
+		}
+
+		for key, value := range outputs {
+			result[key] = value
+		}
+	}
+
+	return result, nil
+}
+
 func NewCloudformation() Cloudformation {
 	if cfClient == nil {
 		retryer := client.DefaultRetryer{

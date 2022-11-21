@@ -3,18 +3,19 @@ provider: ssm
 
 cloudformation-stacks:
   - "{{.stage}}-shared-infra-SharedInfraServerless"
+  - "{{.stage}}-user-debug-stack"
 
 config:
   defaults:
     DB_NAME: "database name updated"
-    API_ENDPOINT: "{{.internalDomainName}}"
+    CF_OUTPUT_API_ENDPOINT: "{{.internalDomainName}}"
     NEW: "endpoint-{{.stage}}"
     NEW2: "endpoint updated"
     NEW3: "endpoint updated"
     AWS_REGION: "{{.region}}"
     AWS_ACCOUNT: "{{.account}}"
-    NEW6: "endpoint updated"
-    NEW7: "endpoint updated"
+    CF_OUTPUT_BUCKET_ARN: "{{.BucketArn}}"
+    CF_OUTPUT_ENDPOINT: "{{.Endpoint}}"
 
   prod:
     DB_NAME: "production db name"
