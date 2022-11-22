@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
+	"github.com/pkg/errors"
 )
 
 var _ Store = &SecretsManagerStore{}
@@ -27,16 +28,44 @@ func NewSecretsManagerStore() (*SecretsManagerStore, error) {
 	}, nil
 }
 
-func (s *SecretsManagerStore) Put(input ConfigInput) error {
-	param := &secretsmanager.PutSecretValueInput{
+func (s *SecretsManagerStore) Create(input ConfigInput) error {
+	param := &secretsmanager.CreateSecretInput{
+		Name:         aws.String(input.Name),
+		SecretString: aws.String(input.Value),
+	}
+
+	if _, err := s.svc.CreateSecret(param); err != nil {
+		return errors.Wrap(err, input.Name)
+	}
+
+	return nil
+}
+
+func (s *SecretsManagerStore) Update(input ConfigInput) error {
+	param := &secretsmanager.UpdateSecretInput{
 		SecretId:     aws.String(input.Name),
 		SecretString: aws.String(input.Value),
 	}
 
-	_, err := s.svc.PutSecretValue(param)
+	if _, err := s.svc.UpdateSecret(param); err != nil {
+		return errors.Wrap(err, input.Name)
+	}
+
+	return nil
+}
+
+func (s *SecretsManagerStore) Put(input ConfigInput) error {
+	found, _ := s.Get(input)
+
+	var err error
+	if found != nil {
+		err = s.Update(input)
+	} else {
+		err = s.Create(input)
+	}
 
 	if err != nil {
-		return err
+		return errors.Wrap(err, input.Name)
 	}
 
 	return nil
@@ -44,9 +73,7 @@ func (s *SecretsManagerStore) Put(input ConfigInput) error {
 
 func (s *SecretsManagerStore) PutMany(inputs []ConfigInput) error {
 	for _, config := range inputs {
-		err := s.Put(config)
-
-		if err != nil {
+		if err := s.Put(config); err != nil {
 			return err
 		}
 	}
@@ -54,7 +81,7 @@ func (s *SecretsManagerStore) PutMany(inputs []ConfigInput) error {
 	return nil
 }
 
-func (s *SecretsManagerStore) Get(input ConfigInput) (Config, error) {
+func (s *SecretsManagerStore) Get(input ConfigInput) (*Config, error) {
 	param := &secretsmanager.GetSecretValueInput{
 		SecretId: aws.String(input.Name),
 	}
@@ -62,10 +89,10 @@ func (s *SecretsManagerStore) Get(input ConfigInput) (Config, error) {
 	result, err := s.svc.GetSecretValue(param)
 
 	if err != nil {
-		return Config{}, err
+		return nil, err
 	}
 
-	return Config{
+	return &Config{
 		Name:     result.Name,
 		Value:    result.SecretString,
 		Version:  *result.VersionId,
@@ -84,7 +111,9 @@ func (s *SecretsManagerStore) GetMany(inputs []ConfigInput) ([]Config, error) {
 
 	for _, input := range inputs {
 		res, _ := s.Get(input)
-		result = append(result, res)
+		if res != nil {
+			result = append(result, *res)
+		}
 	}
 
 	return result, nil
@@ -126,9 +155,28 @@ func (s *SecretsManagerStore) GetByPath(path string) ([]Config, error) {
 }
 
 func (s *SecretsManagerStore) Delete(input ConfigInput) error {
+	param := &secretsmanager.DeleteSecretInput{
+		RecoveryWindowInDays: aws.Int64(7),
+		SecretId:             aws.String(input.Name),
+	}
+
+	if _, err := s.svc.DeleteSecret(param); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *SecretsManagerStore) DeleteMany(inputs []ConfigInput) error {
+	if len(inputs) <= 0 {
+		return nil
+	}
+
+	for _, input := range inputs {
+		if err := s.Delete(input); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

@@ -149,9 +149,7 @@ func doRemoveOrphans(st store.Store, prefix string, all []store.ConfigInput) ([]
 		}
 	}
 
-	err = st.DeleteMany(orphans)
-
-	if err != nil {
+	if err = st.DeleteMany(orphans); err != nil {
 		return nil, err
 	}
 

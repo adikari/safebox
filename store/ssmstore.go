@@ -2,7 +2,6 @@ package store
 
 import (
 	"fmt"
-	"strings"
 
 	a "github.com/adikari/safebox/v2/aws"
 	"github.com/adikari/safebox/v2/util"
@@ -21,7 +20,6 @@ type SSMStore struct {
 
 func NewSSMStore() (*SSMStore, error) {
 	if svc == nil {
-
 		svc = ssm.New(a.Session, &aws.Config{
 			Retryer: a.Retryer,
 		})
@@ -34,9 +32,7 @@ func NewSSMStore() (*SSMStore, error) {
 
 func (s *SSMStore) PutMany(input []ConfigInput) error {
 	for _, config := range input {
-		err := s.Put(config)
-
-		if err != nil {
+		if err := s.Put(config); err != nil {
 			return err
 		}
 	}
@@ -69,9 +65,7 @@ func (s *SSMStore) Put(input ConfigInput) error {
 }
 
 func (s *SSMStore) Delete(config ConfigInput) error {
-	_, err := s.Get(config)
-
-	if err != nil {
+	if _, err := s.Get(config); err != nil {
 		return err
 	}
 
@@ -79,8 +73,7 @@ func (s *SSMStore) Delete(config ConfigInput) error {
 		Name: aws.String(config.Name),
 	}
 
-	_, err = s.svc.DeleteParameter(deleteParameterInput)
-	if err != nil {
+	if _, err := s.svc.DeleteParameter(deleteParameterInput); err != nil {
 		return err
 	}
 
@@ -93,9 +86,7 @@ func (s *SSMStore) DeleteMany(configs []ConfigInput) error {
 	}
 
 	for _, config := range configs {
-		err := s.Delete(config)
-
-		if err != nil {
+		if err := s.Delete(config); err != nil {
 			return err
 		}
 	}
@@ -143,14 +134,14 @@ func (s *SSMStore) GetMany(configs []ConfigInput) ([]Config, error) {
 	return params, nil
 }
 
-func (s *SSMStore) Get(config ConfigInput) (Config, error) {
+func (s *SSMStore) Get(config ConfigInput) (*Config, error) {
 	configs, err := s.GetMany([]ConfigInput{config})
 
 	if err != nil {
-		return Config{}, err
+		return nil, err
 	}
 
-	return configs[0], nil
+	return &configs[0], nil
 }
 
 func (s *SSMStore) GetByPath(path string) ([]Config, error) {
@@ -182,15 +173,6 @@ func (s *SSMStore) GetByPath(path string) ([]Config, error) {
 	recursiveGet()
 
 	return result, nil
-}
-
-func basePath(key string) string {
-	pathParts := strings.Split(key, "/")
-	if len(pathParts) == 1 {
-		return pathParts[0]
-	}
-	end := len(pathParts) - 1
-	return strings.Join(pathParts[0:end], "/")
 }
 
 func parameterToConfig(param *ssm.Parameter) Config {
