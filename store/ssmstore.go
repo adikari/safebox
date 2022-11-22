@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"strings"
 
 	a "github.com/adikari/safebox/v2/aws"
@@ -197,7 +198,7 @@ func parameterToConfig(param *ssm.Parameter) Config {
 		Name:     param.Name,
 		Value:    param.Value,
 		Modified: *param.LastModifiedDate,
-		Version:  int(*param.Version),
+		Version:  fmt.Sprint(*param.Version),
 		Type:     *param.Type,
 		DataType: *param.DataType,
 	}

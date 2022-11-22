@@ -55,13 +55,24 @@ func (s *SecretsManagerStore) PutMany(inputs []ConfigInput) error {
 }
 
 func (s *SecretsManagerStore) Get(input ConfigInput) (Config, error) {
-	configs, err := s.GetMany([]ConfigInput{input})
+	param := &secretsmanager.GetSecretValueInput{
+		SecretId: aws.String(input.Name),
+	}
+
+	result, err := s.svc.GetSecretValue(param)
 
 	if err != nil {
 		return Config{}, err
 	}
 
-	return configs[0], nil
+	return Config{
+		Name:     result.Name,
+		Value:    result.SecretString,
+		Version:  *result.VersionId,
+		Type:     "SecureString",
+		DataType: "SecureString",
+		Modified: *result.CreatedDate,
+	}, nil
 }
 
 func (s *SecretsManagerStore) GetMany(inputs []ConfigInput) ([]Config, error) {
@@ -69,7 +80,14 @@ func (s *SecretsManagerStore) GetMany(inputs []ConfigInput) ([]Config, error) {
 		return []Config{}, nil
 	}
 
-	return []Config{}, nil
+	result := []Config{}
+
+	for _, input := range inputs {
+		res, _ := s.Get(input)
+		result = append(result, res)
+	}
+
+	return result, nil
 }
 
 func (s *SecretsManagerStore) GetByPath(path string) ([]Config, error) {

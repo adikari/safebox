@@ -11,7 +11,7 @@ type Config struct {
 	Name     *string
 	Value    *string
 	Modified time.Time
-	Version  int
+	Version  string
 	Type     string
 	DataType string
 }
