@@ -3,7 +3,6 @@ package store
 import (
 	a "github.com/adikari/safebox/v2/aws"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
 )
@@ -18,13 +17,8 @@ var secretsmanagerService *secretsmanager.SecretsManager
 
 func NewSecretsManagerStore() (*SecretsManagerStore, error) {
 	if secretsmanagerService == nil {
-		retryer := client.DefaultRetryer{
-			NumMaxRetries:    numberOfRetries,
-			MinThrottleDelay: throttleDelay,
-		}
-
 		secretsmanagerService = secretsmanager.New(a.Session, &aws.Config{
-			Retryer: retryer,
+			Retryer: a.Retryer,
 		})
 	}
 
@@ -34,18 +28,47 @@ func NewSecretsManagerStore() (*SecretsManagerStore, error) {
 }
 
 func (s *SecretsManagerStore) Put(input ConfigInput) error {
+	param := &secretsmanager.PutSecretValueInput{
+		SecretId:     aws.String(input.Name),
+		SecretString: aws.String(input.Value),
+	}
+
+	_, err := s.svc.PutSecretValue(param)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *SecretsManagerStore) PutMany(inputs []ConfigInput) error {
+	for _, config := range inputs {
+		err := s.Put(config)
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func (s *SecretsManagerStore) Get(input ConfigInput) (Config, error) {
-	return Config{}, nil
+	configs, err := s.GetMany([]ConfigInput{input})
+
+	if err != nil {
+		return Config{}, err
+	}
+
+	return configs[0], nil
 }
 
 func (s *SecretsManagerStore) GetMany(inputs []ConfigInput) ([]Config, error) {
+	if len(inputs) <= 0 {
+		return []Config{}, nil
+	}
+
 	return []Config{}, nil
 }
 

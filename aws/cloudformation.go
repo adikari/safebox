@@ -4,13 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-)
-
-var (
-	numberOfRetries = 10
-	throttleDelay   = client.DefaultRetryerMinRetryDelay
 )
 
 var cfClient *cloudformation.CloudFormation
@@ -59,13 +53,8 @@ func (c *Cloudformation) GetOutputs(stacknames []string) (map[string]string, err
 
 func NewCloudformation() Cloudformation {
 	if cfClient == nil {
-		retryer := client.DefaultRetryer{
-			NumMaxRetries:    numberOfRetries,
-			MinThrottleDelay: throttleDelay,
-		}
-
 		cfClient = cloudformation.New(Session, &aws.Config{
-			Retryer: retryer,
+			Retryer: Retryer,
 		})
 	}
 
