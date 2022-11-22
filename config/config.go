@@ -15,6 +15,7 @@ import (
 type rawConfig struct {
 	Provider string
 	Service  string
+	Prefix   string
 
 	Config               map[string]map[string]string
 	Secret               map[string]map[string]string
@@ -62,7 +63,6 @@ func Load(param LoadConfigInput) (*Config, error) {
 	c.Service = rc.Service
 	c.Stage = param.Stage
 	c.Provider = rc.Provider
-	c.Prefix = getPrefix(param.Stage, c.Service)
 
 	if c.Provider == "" {
 		c.Provider = store.SsmProvider
@@ -72,6 +72,11 @@ func Load(param LoadConfigInput) (*Config, error) {
 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to variables for interpolation")
+	}
+
+	c.Prefix, err = Interpolate(getPrefix(param.Stage, c.Service, rc.Prefix), variables)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to interpolate prefix")
 	}
 
 	for key, value := range rc.Config["defaults"] {
@@ -135,8 +140,13 @@ func formatPath(prefix string, key string) string {
 	return fmt.Sprintf("%s%s", prefix, key)
 }
 
-func getPrefix(stage string, service string) string {
-	return fmt.Sprintf("/%s/%s/", stage, service)
+func getPrefix(stage string, service string, defaultPrefix string) string {
+	if defaultPrefix == "" {
+		return fmt.Sprintf("/%s/%s/", stage, service)
+	}
+
+	// TODO: validate prefix starts and ends with /
+	return defaultPrefix
 }
 
 func validateConfig(rc rawConfig) error {
