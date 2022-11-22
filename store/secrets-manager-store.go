@@ -91,7 +91,38 @@ func (s *SecretsManagerStore) GetMany(inputs []ConfigInput) ([]Config, error) {
 }
 
 func (s *SecretsManagerStore) GetByPath(path string) ([]Config, error) {
-	return []Config{}, nil
+	var result []Config
+
+	input := &secretsmanager.ListSecretsInput{
+		Filters: []*secretsmanager.Filter{
+			{
+				Key:    aws.String("name"),
+				Values: []*string{aws.String(path)},
+			},
+		},
+	}
+
+	var recursiveGet func()
+	recursiveGet = func() {
+		resp, err := s.svc.ListSecrets(input)
+
+		if err != nil {
+			return
+		}
+
+		for _, secret := range resp.SecretList {
+			result = append(result, Config{Name: secret.Name})
+		}
+
+		if resp.NextToken != nil {
+			input.NextToken = resp.NextToken
+			recursiveGet()
+		}
+	}
+
+	recursiveGet()
+
+	return result, nil
 }
 
 func (s *SecretsManagerStore) Delete(input ConfigInput) error {
