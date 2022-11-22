@@ -65,7 +65,7 @@ func (s *SecretsManagerStore) Put(input ConfigInput) error {
 	}
 
 	if err != nil {
-		return errors.Wrap(err, input.Name)
+		return err
 	}
 
 	return nil
@@ -156,12 +156,12 @@ func (s *SecretsManagerStore) GetByPath(path string) ([]Config, error) {
 
 func (s *SecretsManagerStore) Delete(input ConfigInput) error {
 	param := &secretsmanager.DeleteSecretInput{
-		RecoveryWindowInDays: aws.Int64(7),
-		SecretId:             aws.String(input.Name),
+		ForceDeleteWithoutRecovery: aws.Bool(true),
+		SecretId:                   aws.String(input.Name),
 	}
 
 	if _, err := s.svc.DeleteSecret(param); err != nil {
-		return err
+		return errors.Wrap(err, input.Name)
 	}
 
 	return nil
