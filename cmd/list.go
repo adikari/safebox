@@ -75,7 +75,7 @@ func printList(configs []store.Config) {
 	fmt.Fprintln(w, "")
 
 	for _, config := range configs {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%d\t%s",
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s",
 			*config.Name,
 			*config.Value,
 			config.Type,

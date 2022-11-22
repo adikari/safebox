@@ -11,13 +11,14 @@ type Config struct {
 	Name     *string
 	Value    *string
 	Modified time.Time
-	Version  int
+	Version  string
 	Type     string
 	DataType string
 }
 
 const (
-	SsmProvider = "ssm"
+	SsmProvider            = "ssm"
+	SecretsManagerProvider = "secrets-manager"
 )
 
 type ConfigInput struct {
@@ -34,17 +35,19 @@ var (
 type Store interface {
 	Put(input ConfigInput) error
 	PutMany(input []ConfigInput) error
-	Get(config ConfigInput) (Config, error)
-	GetMany(configs []ConfigInput) ([]Config, error)
+	Get(input ConfigInput) (*Config, error)
+	GetMany(inputs []ConfigInput) ([]Config, error)
 	GetByPath(path string) ([]Config, error)
-	Delete(config ConfigInput) error
-	DeleteMany(configs []ConfigInput) error
+	Delete(input ConfigInput) error
+	DeleteMany(inputs []ConfigInput) error
 }
 
 func GetStore(provider string) (Store, error) {
 	switch provider {
 	case SsmProvider:
 		return NewSSMStore()
+	case SecretsManagerProvider:
+		return NewSecretsManagerStore()
 	default:
 		return nil, fmt.Errorf("invalid provider `%s`", provider)
 	}

@@ -1,6 +1,6 @@
 # 📦  SafeBox
 
-SafeBox is a command line tool for managing secrets for your application. Currently it supports AWS Parameter Store.
+SafeBox is a command line tool for managing secrets for your application. Currently it supports AWS Parameter Store as AWS Secrets Manager.
 
 ## Installation
 
@@ -60,7 +60,7 @@ You can then run list command to view the pushed configurations.
 
 The variables under
 1. `defaults` is deployed with path prefix of `/<stage>/<service>`
-1. `shared` is deployed with path prefix of `/shared/`
+1. `shared` is deployed with path prefix of `/<stage>/shared/`
 
 ### Config File
 
@@ -68,7 +68,8 @@ Following is the configuration file will all possible options:
 
 ```yaml
 service: my-service
-provider: ssm                                 # Only supports ssm for now.
+provider: secrets-manager                     # ssm OR secrets-manager
+prefix: "/custom/prefix/{{.stage}}/"          # Optional. Defaults to /<stage>/<service>/. Prefix all parameters. Does not apply for shared
 
 stacks:                                       # Outputs from cloudformation stacks that needs to be interpolated.
   - some-cloudformation-stack
@@ -77,15 +78,24 @@ config:
   defaults:                                   # Default parameters. Can be overwritten in different environments.
     DB_NAME: my-database
     DB_HOST: 3200
+    KEY_VALUE_SECRET: '{"hello": "world"}'    # JSON body can be passed when provider is secrets-manager. This will create key value secret
   production:                                 # If keys are deployed to production stage, its value will be overwritten by following
     DB_NAME: my-production-database
-  shared:                                     # shared configuartions deployed under /shared/ path
+  shared:                                     # shared configuartions deployed under /<stage>/shared/ path
     DB_TABLE: "table-{{.stage}}"
 
 secret:
   defaults:
     DB_PASSWORD: "secret database password"   # Value in quote is deployed as description of the ssm parameter.
 ```
+
+**Variables available for interpolation**
+- stage    - Stage used for deployment
+- service  - Name of service as configured in the config file
+- account  - AWS Account number
+- region   - AWS Region
+
+If using `stacks` then the outputs of that Cloudformation stack is also available for interpolation.
 
 ### CLI
 

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/adikari/safebox/v2/store"
 	"github.com/manifoldco/promptui"
@@ -115,7 +114,7 @@ func deploy(cmd *cobra.Command, args []string) error {
 	if removeOrphans {
 		orphans, err := doRemoveOrphans(st, config.Prefix, config.All)
 		if err != nil {
-			log.Print("failed to remove orphans")
+			fmt.Printf("%s\n", errors.Wrap(err, "Error: failed to remove orphan"))
 		}
 
 		fmt.Printf("%d orphans removed.\n", len(orphans))
@@ -149,9 +148,7 @@ func doRemoveOrphans(st store.Store, prefix string, all []store.ConfigInput) ([]
 		}
 	}
 
-	err = st.DeleteMany(orphans)
-
-	if err != nil {
+	if err = st.DeleteMany(orphans); err != nil {
 		return nil, err
 	}
 
