@@ -55,7 +55,7 @@ const install = () => {
         throw new Error(`${tarFile} does not exist`)
       }
 
-      cp.execSync(`tar -xf ${tarFile}.test -C ${tmpdir}`);
+      cp.execSync(`tar -xf ${tarFile} -C ${tmpdir}`);
       fs.copyFileSync(path.join(tmpdir, binaryName), path.join(bin, binaryName));
     } catch (error) {
       console.error('failed to extract binary.', error.message)
