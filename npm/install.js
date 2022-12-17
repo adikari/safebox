@@ -6,10 +6,9 @@ const request = require('request'),
   os = require('os'),
   fs = require('fs'),
   path = require('path'),
-  cp = require('child_process'),
   constants = require('./constants');
 
-const { name, platform, arch, binaryName, bin, tarUrl } = constants;
+const { name, platform, arch, binaryName, bin, binaryUrl } = constants;
 
 if (!arch) {
   error(`${name} is not supported for this architecture: ${arch}`);
@@ -28,16 +27,24 @@ const MAX_RETRIES = 3;
 
 const install = () => {
   const tmpdir = os.tmpdir();
-  const req = request({ uri: tarUrl });
+  const binary = path.join(tmpdir, binaryName);
 
-  const tarFile = `${tmpdir}/${name}-${Date.now()}.tar.gz`;
-  const download = fs.createWriteStream(tarFile);
+  const copyBinary = () => fs.copyFileSync(binary, path.join(bin, binaryName));
 
+  if (fs.existsSync(binary)) {
+    console.log('safebox binary already downloaded');
+    copyBinary();
+    return;
+  }
+
+  const req = request({ uri: binaryUrl });
   if (retries > 0) {
     console.log(`retrying to install safebox - retry ${retries} out of ${MAX_RETRIES}`)
   }
 
   console.log(`downloading safebox binary`);
+
+  const download = fs.createWriteStream(binary);
 
   req.on('response', res => {
     if (res.statusCode !== 200) {
@@ -51,12 +58,11 @@ const install = () => {
     console.log('download complete. installing safebox.')
 
     try {
-      if (!fs.existsSync(tarFile)) {
-        throw new Error(`${tarFile} does not exist`)
+      if (!fs.existsSync(binary)) {
+        throw new Error(`${binary} does not exist`)
       }
 
-      cp.execSync(`tar -xf ${tarFile} -C ${tmpdir}`);
-      fs.copyFileSync(path.join(tmpdir, binaryName), path.join(bin, binaryName));
+      copyBinary();
     } catch (error) {
       console.error('failed to extract binary.', error.message)
 
