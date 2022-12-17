@@ -25,7 +25,6 @@ download_binary_and_run_installer() {
     need_cmd mkdir
     need_cmd rm
     need_cmd rmdir
-    need_cmd tar
     need_cmd which
     need_cmd dirname
     need_cmd awk
@@ -43,10 +42,9 @@ download_binary_and_run_installer() {
     esac
 
 		local _current_dir=$(pwd)
-    local _tardir="safebox_${PACKAGE_VERSION:1}"_"${_arch}"
-    local _url="$BINARY_DOWNLOAD_PREFIX/$PACKAGE_VERSION/${_tardir}.tar.gz"
+    local _binary="safebox_${PACKAGE_VERSION:1}"_"${_arch}"
+    local _url="$BINARY_DOWNLOAD_PREFIX/$PACKAGE_VERSION/${_binary}$_ext"
     local _dir="$(mktemp -d 2>/dev/null || ensure mktemp -d -t test)"
-    local _file="$_dir/input.tar.gz"
     local _safebox="$_dir/safebox$_ext"
 		local _bin_dir="/usr/local/bin"
 
@@ -60,7 +58,6 @@ download_binary_and_run_installer() {
       exit 1
     fi
 
-    ensure tar xf "$_file"
 		sudo mv "$_safebox" "$_bin_dir"
     local _retval=$?
 

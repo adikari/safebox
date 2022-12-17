@@ -21,8 +21,9 @@ const name = 'safebox';
 const version = packageJson.version;
 const platform = PLATFORM_MAPPING[process.platform];
 const arch = ARCH_MAPPING[process.arch];
-const binaryName = platform === 'win32' ? `${name}.ext` : name;
-const tarUrl = `https://github.com/adikari/safebox/releases/download/v${version}/safebox_${version}_${platform}_${arch}.tar.gz`;
+const ext = platform === 'win32' ? '.exe' : '';
+const binaryName = `${name}.${ext}`;
+const binaryUrl = `https://github.com/adikari/safebox/releases/download/v${version}/safebox_${version}_${platform}_${arch}${ext}`;
 const bin = path.join(__dirname, "bin");
 
 const constants = {
@@ -32,7 +33,7 @@ const constants = {
   arch,
   binaryName,
   bin,
-  tarUrl,
+  binaryUrl,
 };
 
 module.exports = constants;
