@@ -11,7 +11,7 @@ SafeBox is available for many Linux distros and Windows.
 $ brew install adikari/taps/safebox
 
 # Via curl
-$ curl -sSL https://raw.githubusercontent.com/adikari/safebox/main/scripts/install.sh | sh
+$ curl -sSL https://raw.githubusercontent.com/monebag/safebox/main/scripts/install.sh | sh
 
 # Via npm
 $ npm install @adikari/safebox
@@ -20,7 +20,7 @@ $ npm install @adikari/safebox
 $ yarn add @adikari/safebox
 ```
 
-To install it directly find the right version for your machine in [releases](https://github.com/adikari/safebox/releases) page. Download and un-archive the files. Copy the `safebox` binary to the PATH or use it directly.
+To install it directly find the right version for your machine in [releases](https://github.com/monebag/safebox/releases) page. Download and un-archive the files. Copy the `safebox` binary to the PATH or use it directly.
 
 ## Usage
 
@@ -146,7 +146,7 @@ echo $CONFIG2
 
 ### Release
 
-1. Update version number [npm/package.json](https://github.com/adikari/safebox/blob/main/npm/package.json).
+1. Update version number [npm/package.json](https://github.com/monebag/safebox/blob/main/npm/package.json).
 2. Merge the changes to main branch.
 2. Create a git tag that matches the same version number as npm package version.
 3. Push the tag to github. Tag must follow semversion and prefixed with `v`. Eg. `v.1.2.3`.

@@ -5,7 +5,7 @@
 # option. This file may not be copied, modified, or distributed
 # except according to those terms.
 
-# curl -sSL https://raw.githubusercontent.com/adikari/safebox/main/scripts/install.sh | sh
+# curl -sSL https://raw.githubusercontent.com/monebag/safebox/main/scripts/install.sh | sh
 
 set -u
 
@@ -15,8 +15,8 @@ get_latest_release() {
     sed -E 's/.*"([^"]+)".*/\1/'
 }
 
-BINARY_DOWNLOAD_PREFIX="https://github.com/adikari/safebox/releases/download"
-PACKAGE_VERSION=$(get_latest_release adikari/safebox)
+BINARY_DOWNLOAD_PREFIX="https://github.com/monebag/safebox/releases/download"
+PACKAGE_VERSION=$(get_latest_release monebag/safebox)
 
 download_binary_and_run_installer() {
     downloader --check
@@ -52,7 +52,7 @@ download_binary_and_run_installer() {
     say "downloading safebox from $_url" 1>&2
 
     ensure mkdir -p "$_dir"
-    downloader "$_url" "$_file"
+    downloader "$_url" "$_safebox"
     if [ $? != 0 ]; then
       say "failed to download $_url"
       exit 1
@@ -60,6 +60,8 @@ download_binary_and_run_installer() {
 
 		sudo mv "$_safebox" "$_bin_dir"
     local _retval=$?
+
+    chmod +x "${_bin_dir}/safebox"
 
     ignore rm -rf "$_dir"
 
