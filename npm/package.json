@@ -11,11 +11,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adikari/safebox.git"
+    "url": "git+https://github.com/monebag/safebox.git"
   },
   "author": "Subash Adhikari <me@subash.com.au>",
   "license": "MIT",
-  "homepage": "https://github.com/adikari/safebox",
+  "homepage": "https://github.com/monebag/safebox",
   "dependencies": {
     "request": "^2.88.2"
   }
