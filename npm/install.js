@@ -29,34 +29,32 @@ const install = () => {
   const tmpdir = os.tmpdir();
   const binary = path.join(tmpdir, binaryName);
 
-  const copyBinary = () => fs.copyFileSync(binary, path.join(bin, binaryName));
+  const copyBinary = () => {
+    fs.copyFileSync(binary, path.join(bin, binaryName));
+  }
 
   if (fs.existsSync(binary)) {
-    console.log('safebox binary already downloaded');
     copyBinary();
     return;
   }
 
   const req = request({ uri: binaryUrl });
+
   if (retries > 0) {
     console.log(`retrying to install safebox - retry ${retries} out of ${MAX_RETRIES}`)
   }
-
-  console.log(`downloading safebox binary`);
 
   const download = fs.createWriteStream(binary);
 
   req.on('response', res => {
     if (res.statusCode !== 200) {
-      error(`Error downloading safebox binary. HTTP Status Code: ${res.statusCode}`);
+      throw new Error(`Error downloading safebox binary. HTTP Status Code: ${res.statusCode}`);
     }
 
     req.pipe(download);
   });
 
   req.on('complete', () => {
-    console.log('download complete. installing safebox.')
-
     try {
       if (!fs.existsSync(binary)) {
         throw new Error(`${binary} does not exist`)
@@ -64,8 +62,6 @@ const install = () => {
 
       copyBinary();
     } catch (error) {
-      console.error('failed to extract binary.', error.message)
-
       retries += 1;
       if (retries <= MAX_RETRIES) {
         install();
