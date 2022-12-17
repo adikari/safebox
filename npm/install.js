@@ -30,7 +30,9 @@ const install = () => {
   const binary = path.join(tmpdir, binaryName);
 
   const copyBinary = () => {
-    fs.copyFileSync(binary, path.join(bin, binaryName));
+    const dest = path.join(bin, binaryName);
+    fs.copyFileSync(binary, dest);
+    fs.chmodSync(dest, 0o744)
   }
 
   if (fs.existsSync(binary)) {
