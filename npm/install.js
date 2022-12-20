@@ -8,7 +8,7 @@ const request = require('request'),
   path = require('path'),
   constants = require('./constants');
 
-const { name, platform, arch, binaryName, bin, binaryUrl } = constants;
+const { name, platform, arch, binaryName, bin, binaryUrl, version } = constants;
 
 if (!arch) {
   error(`${name} is not supported for this architecture: ${arch}`);
@@ -27,7 +27,7 @@ const MAX_RETRIES = 3;
 
 const install = () => {
   const tmpdir = os.tmpdir();
-  const binary = path.join(tmpdir, binaryName);
+  const binary = path.join(tmpdir, `${binaryName}-${version}`);
 
   const copyBinary = () => {
     const dest = path.join(bin, binaryName);
