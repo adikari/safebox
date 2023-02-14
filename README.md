@@ -1,6 +1,6 @@
 # 📦  SafeBox
 
-SafeBox is a command line tool for managing secrets for your application. Currently it supports AWS Parameter Store as AWS Secrets Manager.
+SafeBox is a command line tool for managing secrets for your application. Currently it supports AWS Parameter Store and AWS Secrets Manager.
 
 ## Installation
 
