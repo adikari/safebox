@@ -27,6 +27,7 @@ To install it directly find the right version for your machine in [releases](htt
 1. Create a configuration file called `safebox.yml`.
 
 ```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/monebag/safebox/main/schema.json
 service: my-service
 provider: ssm
 

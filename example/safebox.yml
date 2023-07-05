@@ -1,10 +1,11 @@
+# yaml-language-server: $schema=../schema.json
 service: safebox
 provider: ssm
-
+  
 cloudformation-stacks:
   - "{{.stage}}-shared-infra-SharedInfraServerless"
   - "{{.stage}}-user-debug-stack"
-
+  
 config:
   defaults:
     DB_NAME: "database name updated"

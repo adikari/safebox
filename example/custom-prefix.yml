@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../schema.json
 service: safebox
 provider: ssm
 
