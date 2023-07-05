@@ -19,7 +19,7 @@ var rootCmd = &cobra.Command{
 	Short:        "SafeBox is a secret manager CLI program",
 	Long:         `A Fast and Flexible secret manager built with love by adikari in Go.`,
 	SilenceUsage: true,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		cmd.Usage()
 	},
 }

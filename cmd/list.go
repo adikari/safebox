@@ -31,7 +31,7 @@ func init() {
 	rootCmd.AddCommand(listCmd)
 }
 
-func list(cmd *cobra.Command, args []string) error {
+func list(_ *cobra.Command, _ []string) error {
 	config, err := loadConfig()
 
 	if err != nil {

@@ -39,7 +39,7 @@ func init() {
 	rootCmd.AddCommand(exportCmd)
 }
 
-func export(cmd *cobra.Command, args []string) error {
+func export(_ *cobra.Command, _ []string) error {
 	config, err := loadConfig()
 
 	if err != nil {

@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=../schema.json
+service: safebox
+provider: ssm
+
+config:
+  defaults:
+    DB_NAME: "database name updated"
+
+  shared:
+    SHARED_KEY: "shared key"
+
+secret:
+  defaults:
+    API_KEY: "key of the api endpoint"
