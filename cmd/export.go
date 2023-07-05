@@ -31,7 +31,7 @@ var (
 )
 
 func init() {
-	exportCmd.Flags().StringVarP(&exportFormat, "format", "f", "json", "output format (json, yaml, dotenv)")
+	exportCmd.Flags().StringVarP(&exportFormat, "format", "f", "json", "output format (json, yaml, dotenv, types-node)")
 	exportCmd.Flags().StringVarP(&outputFile, "output-file", "o", "", "output file (default is standard output)")
 	exportCmd.Flags().StringSliceVarP(&keysToExport, "key", "k", []string{}, "only export specified config (default is export all)")
 	exportCmd.MarkFlagFilename("output-file")
@@ -87,6 +87,8 @@ func export(_ *cobra.Command, _ []string) error {
 		err = exportAsYaml(params, w)
 	case "dotenv":
 		err = exportAsEnvFile(params, w)
+	case "types-node":
+		err = exportAsTypesNode(params, w)
 	default:
 		err = errors.Errorf("unsupported export format: %s", exportFormat)
 	}
@@ -94,6 +96,23 @@ func export(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to export parameters")
 	}
+
+	return nil
+}
+
+func exportAsTypesNode(params map[string]string, w io.Writer) error {
+	w.Write([]byte(fmt.Sprintf("declare global {\n")))
+	w.Write([]byte(fmt.Sprintf("  namespace NodeJS {\n")))
+	w.Write([]byte(fmt.Sprintf("    interface ProcessEnv {\n")))
+
+	for _, k := range sortedKeys(params) {
+		key := strings.ToUpper(k)
+		w.Write([]byte(fmt.Sprintf(`      %s: string;`+"\n", key)))
+	}
+
+	w.Write([]byte(fmt.Sprintf("    }\n")))
+	w.Write([]byte(fmt.Sprintf("  }\n")))
+	w.Write([]byte(fmt.Sprintf("}\n")))
 
 	return nil
 }
