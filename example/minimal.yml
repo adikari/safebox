@@ -1,6 +1,12 @@
 # yaml-language-server: $schema=../schema.json
 service: safebox
 provider: ssm
+  
+generate:
+  - type: types-node
+    path: types/env.d.ts
+  - type: json
+    path: env.json
 
 config:
   defaults:

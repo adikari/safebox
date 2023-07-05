@@ -6,6 +6,12 @@ cloudformation-stacks:
   - "{{.stage}}-shared-infra-SharedInfraServerless"
   - "{{.stage}}-user-debug-stack"
   
+generate:
+  - type: types-node
+    path: types/env.d.ts
+  - type: json
+    path: env.json
+ 
 config:
   defaults:
     DB_NAME: "database name updated"

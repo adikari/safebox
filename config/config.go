@@ -13,10 +13,10 @@ import (
 )
 
 type rawConfig struct {
-	Provider string
-	Service  string
-	Prefix   string
-
+	Provider             string
+	Service              string
+	Prefix               string
+	Generate             []Generate `yaml:"generate"`
 	Config               map[string]map[string]string
 	Secret               map[string]map[string]string
 	CloudformationStacks []string `yaml:"cloudformation-stacks"`
@@ -27,10 +27,16 @@ type Config struct {
 	Service  string
 	Stage    string
 	Prefix   string
+	Generate []Generate
 	All      []store.ConfigInput
 	Configs  []store.ConfigInput
 	Secrets  []store.ConfigInput
 	Stacks   []string
+}
+
+type Generate struct {
+	Type string
+	Path string
 }
 
 type LoadConfigInput struct {
@@ -50,6 +56,7 @@ func Load(param LoadConfigInput) (*Config, error) {
 	err = yaml.Unmarshal(yamlFile, &rc)
 
 	if err != nil {
+		fmt.Printf("%v", err)
 		return nil, fmt.Errorf("could not parse safebox config file %s", param.Path)
 	}
 
@@ -59,10 +66,12 @@ func Load(param LoadConfigInput) (*Config, error) {
 		return nil, errors.Wrap(err, "invalid configuration")
 	}
 
-	c := Config{}
-	c.Service = rc.Service
-	c.Stage = param.Stage
-	c.Provider = rc.Provider
+	c := Config{
+		Service:  rc.Service,
+		Stage:    param.Stage,
+		Provider: rc.Provider,
+		Generate: rc.Generate,
+	}
 
 	if c.Provider == "" {
 		c.Provider = store.SsmProvider
