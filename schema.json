@@ -22,6 +22,7 @@
         "description": "Generate different files based on the parameter name and values",
         "items": {
           "type": "object",
+          "required": ["type", "path"],
           "properties": {
             "type": {
               "enum": ["json", "yaml", "dotenv", "types-node"],

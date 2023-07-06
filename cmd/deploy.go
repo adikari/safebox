@@ -122,6 +122,24 @@ func deploy(_ *cobra.Command, _ []string) error {
 
 	fmt.Printf("%d new configs deployed. service = %s, stage = %s\n", len(configsToDeploy), config.Service, stage)
 
+	if len(config.Generate) > 0 {
+		for _, t := range config.Generate {
+			err := exportToFile(ExportParams{
+				config: config,
+				format: t.Type,
+				output: t.Path,
+			})
+
+			if err != nil {
+				fmt.Printf("Error: failed to generate file type = %s, output = %s\n", t.Type, t.Path)
+				fmt.Printf("       %s\n", err)
+				continue
+			}
+
+			fmt.Printf("file written: %s\n", t.Path)
+		}
+	}
+
 	return nil
 }
 

@@ -27,9 +27,15 @@ To install it directly find the right version for your machine in [releases](htt
 1. Create a configuration file called `safebox.yml`.
 
 ```yaml
-# yaml-language-server: $schema=https://raw.githubusercontent.com/monebag/safebox/main/schema.json
 service: my-service
 provider: ssm
+
+# Optional: generate the given files based on the parameters
+generate:
+    - type: types-node
+      path: types/env.d.ts
+    - type: dotenv
+      path: .env
 
 config:
   defaults:
@@ -49,6 +55,8 @@ secret:
 
   shared:
     SHARED_KEY: "shared key"
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/monebag/safebox/main/schema.json
 ```
 
 2. Use `safebox` CLI tool to deploy your configuration.

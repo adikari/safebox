@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
+	c "github.com/adikari/safebox/v2/config"
 	"github.com/adikari/safebox/v2/store"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -46,13 +48,29 @@ func export(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "failed to load config")
 	}
 
-	store, err := store.GetStore(config.Provider)
+	return exportToFile(ExportParams{
+		config:       config,
+		keysToExport: keysToExport,
+		format:       exportFormat,
+		output:       outputFile,
+	})
+}
+
+type ExportParams struct {
+	config       *c.Config
+	keysToExport []string
+	format       string
+	output       string
+}
+
+func exportToFile(p ExportParams) error {
+	store, err := store.GetStore(p.config.Provider)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to instantiate store")
 	}
 
-	toExport, err := configsToExport(config.All)
+	toExport, err := configsToExport(p.config.All, p.keysToExport)
 
 	if err != nil {
 		return err
@@ -64,15 +82,12 @@ func export(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "failed to get params")
 	}
 
-	file := os.Stdout
-	if outputFile != "" {
-		if file, err = os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
-			return errors.Wrap(err, "Failed to open output file for writing")
-		}
-		defer file.Close()
-		defer file.Sync()
+	w, err := getFileBuffer(p.output)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to write file")
 	}
-	w := bufio.NewWriter(file)
+
 	defer w.Flush()
 
 	params := map[string]string{}
@@ -80,7 +95,7 @@ func export(_ *cobra.Command, _ []string) error {
 		params[c.Key()] = *c.Value
 	}
 
-	switch strings.ToLower(exportFormat) {
+	switch strings.ToLower(p.format) {
 	case "json":
 		err = exportAsJson(params, w)
 	case "yaml":
@@ -164,14 +179,14 @@ func doubleQuoteEscape(line string) string {
 	return line
 }
 
-func configsToExport(configs []store.ConfigInput) ([]store.ConfigInput, error) {
-	if len(keysToExport) == 0 {
+func configsToExport(configs []store.ConfigInput, keys []string) ([]store.ConfigInput, error) {
+	if len(keys) == 0 {
 		return configs, nil
 	}
 
 	result := []store.ConfigInput{}
 
-	for _, key := range keysToExport {
+	for _, key := range keys {
 		var found bool
 
 		for _, config := range configs {
@@ -188,4 +203,30 @@ func configsToExport(configs []store.ConfigInput) ([]store.ConfigInput, error) {
 	}
 
 	return result, nil
+}
+
+func getFileBuffer(output string) (*bufio.Writer, error) {
+	if output == "" {
+		return bufio.NewWriter(os.Stdout), nil
+	}
+
+	directory := filepath.Dir(output)
+
+	if _, err := os.Stat(directory); errors.Is(err, os.ErrNotExist) {
+		err := os.MkdirAll(directory, os.ModePerm)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to write file")
+		}
+	}
+
+	file, err := os.OpenFile(output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open output file for writing")
+	}
+
+	defer file.Close()
+	defer file.Sync()
+
+	return bufio.NewWriter(file), nil
 }

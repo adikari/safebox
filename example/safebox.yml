@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 service: safebox
 provider: ssm
   
@@ -40,3 +39,5 @@ secret:
 
   shared:
     APOLLO_KEY: "apollo key"
+      
+# yaml-language-server: $schema=../schema.json

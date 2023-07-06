@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 service: safebox
 provider: ssm
   
@@ -18,3 +17,5 @@ config:
 secret:
   defaults:
     API_KEY: "key of the api endpoint"
+
+# yaml-language-server: $schema=../schema.json
