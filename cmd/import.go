@@ -27,7 +27,7 @@ func init() {
 	rootCmd.AddCommand(importCmd)
 }
 
-func importE(cmd *cobra.Command, args []string) error {
+func importE(_ *cobra.Command, _ []string) error {
 	log.Fatalf("not implemented")
 	return nil
 }

@@ -27,7 +27,7 @@ func init() {
 	deployCmd.Flags().StringVarP(&prompt, "prompt", "p", "", "prompt for configurations (missing or all)")
 }
 
-func deploy(cmd *cobra.Command, args []string) error {
+func deploy(_ *cobra.Command, _ []string) error {
 	config, err := loadConfig()
 
 	if prompt != "" && prompt != "all" && prompt != "missing" {
@@ -121,6 +121,24 @@ func deploy(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("%d new configs deployed. service = %s, stage = %s\n", len(configsToDeploy), config.Service, stage)
+
+	if len(config.Generate) > 0 {
+		for _, t := range config.Generate {
+			err := exportToFile(ExportParams{
+				config: config,
+				format: t.Type,
+				output: t.Path,
+			})
+
+			if err != nil {
+				fmt.Printf("Error: failed to generate file type = %s, output = %s\n", t.Type, t.Path)
+				fmt.Printf("       %s\n", err)
+				continue
+			}
+
+			fmt.Printf("file written: %s\n", t.Path)
+		}
+	}
 
 	return nil
 }

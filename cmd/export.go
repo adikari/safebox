@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
+	c "github.com/adikari/safebox/v2/config"
 	"github.com/adikari/safebox/v2/store"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -31,7 +33,7 @@ var (
 )
 
 func init() {
-	exportCmd.Flags().StringVarP(&exportFormat, "format", "f", "json", "output format (json, yaml, dotenv)")
+	exportCmd.Flags().StringVarP(&exportFormat, "format", "f", "json", "output format (json, yaml, dotenv, types-node)")
 	exportCmd.Flags().StringVarP(&outputFile, "output-file", "o", "", "output file (default is standard output)")
 	exportCmd.Flags().StringSliceVarP(&keysToExport, "key", "k", []string{}, "only export specified config (default is export all)")
 	exportCmd.MarkFlagFilename("output-file")
@@ -39,20 +41,36 @@ func init() {
 	rootCmd.AddCommand(exportCmd)
 }
 
-func export(cmd *cobra.Command, args []string) error {
+func export(_ *cobra.Command, _ []string) error {
 	config, err := loadConfig()
 
 	if err != nil {
 		return errors.Wrap(err, "failed to load config")
 	}
 
-	store, err := store.GetStore(config.Provider)
+	return exportToFile(ExportParams{
+		config:       config,
+		keysToExport: keysToExport,
+		format:       exportFormat,
+		output:       outputFile,
+	})
+}
+
+type ExportParams struct {
+	config       *c.Config
+	keysToExport []string
+	format       string
+	output       string
+}
+
+func exportToFile(p ExportParams) error {
+	store, err := store.GetStore(p.config.Provider)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to instantiate store")
 	}
 
-	toExport, err := configsToExport(config.All)
+	toExport, err := configsToExport(p.config.All, p.keysToExport)
 
 	if err != nil {
 		return err
@@ -64,15 +82,12 @@ func export(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to get params")
 	}
 
-	file := os.Stdout
-	if outputFile != "" {
-		if file, err = os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
-			return errors.Wrap(err, "Failed to open output file for writing")
-		}
-		defer file.Close()
-		defer file.Sync()
+	w, err := getFileBuffer(p.output)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to write file")
 	}
-	w := bufio.NewWriter(file)
+
 	defer w.Flush()
 
 	params := map[string]string{}
@@ -80,13 +95,15 @@ func export(cmd *cobra.Command, args []string) error {
 		params[c.Key()] = *c.Value
 	}
 
-	switch strings.ToLower(exportFormat) {
+	switch strings.ToLower(p.format) {
 	case "json":
 		err = exportAsJson(params, w)
 	case "yaml":
 		err = exportAsYaml(params, w)
 	case "dotenv":
 		err = exportAsEnvFile(params, w)
+	case "types-node":
+		err = exportAsTypesNode(params, w)
 	default:
 		err = errors.Errorf("unsupported export format: %s", exportFormat)
 	}
@@ -94,6 +111,23 @@ func export(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to export parameters")
 	}
+
+	return nil
+}
+
+func exportAsTypesNode(params map[string]string, w io.Writer) error {
+	w.Write([]byte(fmt.Sprintf("declare global {\n")))
+	w.Write([]byte(fmt.Sprintf("  namespace NodeJS {\n")))
+	w.Write([]byte(fmt.Sprintf("    interface ProcessEnv {\n")))
+
+	for _, k := range sortedKeys(params) {
+		key := strings.ToUpper(k)
+		w.Write([]byte(fmt.Sprintf(`      %s: string;`+"\n", key)))
+	}
+
+	w.Write([]byte(fmt.Sprintf("    }\n")))
+	w.Write([]byte(fmt.Sprintf("  }\n")))
+	w.Write([]byte(fmt.Sprintf("}\n")))
 
 	return nil
 }
@@ -145,14 +179,14 @@ func doubleQuoteEscape(line string) string {
 	return line
 }
 
-func configsToExport(configs []store.ConfigInput) ([]store.ConfigInput, error) {
-	if len(keysToExport) == 0 {
+func configsToExport(configs []store.ConfigInput, keys []string) ([]store.ConfigInput, error) {
+	if len(keys) == 0 {
 		return configs, nil
 	}
 
 	result := []store.ConfigInput{}
 
-	for _, key := range keysToExport {
+	for _, key := range keys {
 		var found bool
 
 		for _, config := range configs {
@@ -169,4 +203,30 @@ func configsToExport(configs []store.ConfigInput) ([]store.ConfigInput, error) {
 	}
 
 	return result, nil
+}
+
+func getFileBuffer(output string) (*bufio.Writer, error) {
+	if output == "" {
+		return bufio.NewWriter(os.Stdout), nil
+	}
+
+	directory := filepath.Dir(output)
+
+	if _, err := os.Stat(directory); errors.Is(err, os.ErrNotExist) {
+		err := os.MkdirAll(directory, os.ModePerm)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to write file")
+		}
+	}
+
+	file, err := os.OpenFile(output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open output file for writing")
+	}
+
+	defer file.Close()
+	defer file.Sync()
+
+	return bufio.NewWriter(file), nil
 }

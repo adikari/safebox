@@ -1,0 +1,21 @@
+service: safebox
+provider: ssm
+  
+generate:
+  - type: types-node
+    path: types/env.d.ts
+  - type: json
+    path: env.json
+
+config:
+  defaults:
+    DB_NAME: "database name updated"
+
+  shared:
+    SHARED_KEY: "shared key"
+
+secret:
+  defaults:
+    API_KEY: "key of the api endpoint"
+
+# yaml-language-server: $schema=../schema.json
