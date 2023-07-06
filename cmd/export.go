@@ -82,12 +82,26 @@ func exportToFile(p ExportParams) error {
 		return errors.Wrap(err, "failed to get params")
 	}
 
-	w, err := getFileBuffer(p.output)
+	file := os.Stdout
+	if p.output != "" {
+		directory := filepath.Dir(p.output)
 
-	if err != nil {
-		return errors.Wrap(err, "failed to write file")
+		if _, err := os.Stat(directory); errors.Is(err, os.ErrNotExist) {
+			err := os.MkdirAll(directory, os.ModePerm)
+			if err != nil {
+				return errors.Wrap(err, "failed to write file")
+			}
+		}
+
+		if file, err = os.OpenFile(p.output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
+			return errors.Wrap(err, "failed to open output file for writing")
+		}
+
+		defer file.Close()
+		defer file.Sync()
 	}
 
+	w := bufio.NewWriter(file)
 	defer w.Flush()
 
 	params := map[string]string{}
@@ -203,30 +217,4 @@ func configsToExport(configs []store.ConfigInput, keys []string) ([]store.Config
 	}
 
 	return result, nil
-}
-
-func getFileBuffer(output string) (*bufio.Writer, error) {
-	if output == "" {
-		return bufio.NewWriter(os.Stdout), nil
-	}
-
-	directory := filepath.Dir(output)
-
-	if _, err := os.Stat(directory); errors.Is(err, os.ErrNotExist) {
-		err := os.MkdirAll(directory, os.ModePerm)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to write file")
-		}
-	}
-
-	file, err := os.OpenFile(output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to open output file for writing")
-	}
-
-	defer file.Close()
-	defer file.Sync()
-
-	return bufio.NewWriter(file), nil
 }
