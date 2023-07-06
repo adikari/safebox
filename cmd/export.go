@@ -141,7 +141,8 @@ func exportAsTypesNode(params map[string]string, w io.Writer) error {
 
 	w.Write([]byte(fmt.Sprintf("    }\n")))
 	w.Write([]byte(fmt.Sprintf("  }\n")))
-	w.Write([]byte(fmt.Sprintf("}\n")))
+	w.Write([]byte(fmt.Sprintf("}\n\n")))
+	w.Write([]byte(fmt.Sprintf("export {};\n")))
 
 	return nil
 }
