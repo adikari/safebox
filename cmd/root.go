@@ -27,7 +27,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&stage, "stage", "s", "dev", "stage to deploy to")
 
-	rootCmd.PersistentFlags().StringVarP(&pathToConfig, "config", "c", "safebox.yml", "path to safebox configuration file")
+	rootCmd.PersistentFlags().StringVarP(&pathToConfig, "config", "c", "", "path to safebox configuration file")
 	rootCmd.MarkFlagFilename("config")
 }
 

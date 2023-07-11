@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"strings"
 
 	"github.com/adikari/safebox/v2/aws"
 	"github.com/adikari/safebox/v2/store"
@@ -44,11 +45,13 @@ type LoadConfigInput struct {
 	Stage string
 }
 
+var defaultConfigPaths = []string{"safebox.yml", "safebox.yaml"}
+
 func Load(param LoadConfigInput) (*Config, error) {
-	yamlFile, err := ioutil.ReadFile(param.Path)
+	yamlFile, err := readConfigFile(param.Path)
 
 	if err != nil {
-		return nil, fmt.Errorf("missing safebox config file %s", param.Path)
+		return nil, fmt.Errorf(err.Error())
 	}
 
 	rc := rawConfig{}
@@ -239,4 +242,22 @@ loop:
 	}
 
 	return unique
+}
+
+func readConfigFile(path string) ([]byte, error) {
+	if path != "" {
+		s, err := ioutil.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("missing file %s", path)
+		}
+		return s, nil
+	}
+
+	for _, c := range defaultConfigPaths {
+		if s, err := ioutil.ReadFile(c); err == nil {
+			return s, nil
+		}
+	}
+
+	return nil, fmt.Errorf("missing file %s", strings.Join(defaultConfigPaths, " or "))
 }
