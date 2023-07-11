@@ -3,31 +3,23 @@ package store
 import (
 	"fmt"
 
-	a "github.com/adikari/safebox/v2/aws"
 	"github.com/adikari/safebox/v2/util"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
 )
 
 var _ Store = &SSMStore{}
 
-var svc *ssm.SSM
-
 type SSMStore struct {
 	svc ssmiface.SSMAPI
 }
 
-func NewSSMStore() (*SSMStore, error) {
-	if svc == nil {
-		svc = ssm.New(a.Session, &aws.Config{
-			Retryer: a.Retryer,
-		})
-	}
+func NewSSMStore(session *session.Session) (*SSMStore, error) {
+	svc := ssm.New(session)
 
-	return &SSMStore{
-		svc: svc,
-	}, nil
+	return &SSMStore{svc: svc}, nil
 }
 
 func (s *SSMStore) PutMany(input []ConfigInput) error {

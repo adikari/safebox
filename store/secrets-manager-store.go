@@ -1,8 +1,8 @@
 package store
 
 import (
-	a "github.com/adikari/safebox/v2/aws"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
 	"github.com/pkg/errors"
@@ -14,14 +14,8 @@ type SecretsManagerStore struct {
 	svc secretsmanageriface.SecretsManagerAPI
 }
 
-var secretsmanagerService *secretsmanager.SecretsManager
-
-func NewSecretsManagerStore() (*SecretsManagerStore, error) {
-	if secretsmanagerService == nil {
-		secretsmanagerService = secretsmanager.New(a.Session, &aws.Config{
-			Retryer: a.Retryer,
-		})
-	}
+func NewSecretsManagerStore(session *session.Session) (*SecretsManagerStore, error) {
+	secretsmanagerService := secretsmanager.New(session)
 
 	return &SecretsManagerStore{
 		svc: secretsmanagerService,

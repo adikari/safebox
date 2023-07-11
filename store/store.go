@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws/session"
 )
 
 type Config struct {
@@ -42,14 +44,19 @@ type Store interface {
 	DeleteMany(inputs []ConfigInput) error
 }
 
-func GetStore(provider string) (Store, error) {
-	switch provider {
+type StoreConfig struct {
+	Provider string
+	Session  *session.Session
+}
+
+func GetStore(cfg StoreConfig) (Store, error) {
+	switch cfg.Provider {
 	case SsmProvider:
-		return NewSSMStore()
+		return NewSSMStore(cfg.Session)
 	case SecretsManagerProvider:
-		return NewSecretsManagerStore()
+		return NewSecretsManagerStore(cfg.Session)
 	default:
-		return nil, fmt.Errorf("invalid provider `%s`", provider)
+		return nil, fmt.Errorf("invalid provider `%s`", cfg.Provider)
 	}
 }
 

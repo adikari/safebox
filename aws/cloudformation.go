@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 )
 
@@ -11,6 +12,14 @@ var cfClient *cloudformation.CloudFormation
 
 type Cloudformation struct {
 	client *cloudformation.CloudFormation
+}
+
+func NewCloudformation(session *session.Session) Cloudformation {
+	if cfClient == nil {
+		cfClient = cloudformation.New(session)
+	}
+
+	return Cloudformation{client: cfClient}
 }
 
 func (c *Cloudformation) GetOutput(stackname string) (map[string]string, error) {
@@ -49,14 +58,4 @@ func (c *Cloudformation) GetOutputs(stacknames []string) (map[string]string, err
 	}
 
 	return result, nil
-}
-
-func NewCloudformation() Cloudformation {
-	if cfClient == nil {
-		cfClient = cloudformation.New(Session, &aws.Config{
-			Retryer: Retryer,
-		})
-	}
-
-	return Cloudformation{client: cfClient}
 }

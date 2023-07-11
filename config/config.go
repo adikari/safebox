@@ -9,6 +9,8 @@ import (
 
 	"github.com/adikari/safebox/v2/aws"
 	"github.com/adikari/safebox/v2/store"
+	a "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
@@ -21,6 +23,7 @@ type rawConfig struct {
 	Config               map[string]map[string]string
 	Secret               map[string]map[string]string
 	CloudformationStacks []string `yaml:"cloudformation-stacks"`
+	Region               string   `yaml:"region"`
 }
 
 type Config struct {
@@ -33,6 +36,7 @@ type Config struct {
 	Configs  []store.ConfigInput
 	Secrets  []store.ConfigInput
 	Stacks   []string
+	Session  *session.Session
 }
 
 type Generate struct {
@@ -79,6 +83,8 @@ func Load(param LoadConfigInput) (*Config, error) {
 	if c.Provider == "" {
 		c.Provider = store.SsmProvider
 	}
+
+	c.Session = aws.NewSession(a.Config{Region: &rc.Region})
 
 	variables, err := loadVariables(c, rc)
 
@@ -174,7 +180,7 @@ func validateConfig(rc rawConfig) error {
 }
 
 func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
-	st := aws.NewSts()
+	st := aws.NewSts(c.Session)
 
 	id, err := st.GetCallerIdentity()
 
@@ -185,7 +191,7 @@ func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
 	variables := map[string]string{
 		"stage":   c.Stage,
 		"service": c.Service,
-		"region":  *aws.Session.Config.Region,
+		"region":  *c.Session.Config.Region,
 		"account": *id.Account,
 	}
 
@@ -199,7 +205,7 @@ func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
 
 	// add cloudformation outputs to variables available for interpolation
 	if len(c.Stacks) > 0 {
-		cf := aws.NewCloudformation()
+		cf := aws.NewCloudformation(c.Session)
 		outputs, err := cf.GetOutputs(c.Stacks)
 
 		if err != nil {
