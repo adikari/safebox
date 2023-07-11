@@ -38,7 +38,7 @@ func list(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "failed to load config")
 	}
 
-	store, err := store.GetStore(config.Provider)
+	store, err := store.GetStore(store.StoreConfig{Session: config.Session, Provider: config.Provider})
 
 	if err != nil {
 		return errors.Wrap(err, "failed to instantiate store")

@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"strings"
 
 	"github.com/adikari/safebox/v2/aws"
 	"github.com/adikari/safebox/v2/store"
+	a "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
@@ -20,6 +23,7 @@ type rawConfig struct {
 	Config               map[string]map[string]string
 	Secret               map[string]map[string]string
 	CloudformationStacks []string `yaml:"cloudformation-stacks"`
+	Region               string   `yaml:"region"`
 }
 
 type Config struct {
@@ -32,6 +36,7 @@ type Config struct {
 	Configs  []store.ConfigInput
 	Secrets  []store.ConfigInput
 	Stacks   []string
+	Session  *session.Session
 }
 
 type Generate struct {
@@ -44,11 +49,13 @@ type LoadConfigInput struct {
 	Stage string
 }
 
+var defaultConfigPaths = []string{"safebox.yml", "safebox.yaml"}
+
 func Load(param LoadConfigInput) (*Config, error) {
-	yamlFile, err := ioutil.ReadFile(param.Path)
+	yamlFile, err := readConfigFile(param.Path)
 
 	if err != nil {
-		return nil, fmt.Errorf("missing safebox config file %s", param.Path)
+		return nil, fmt.Errorf(err.Error())
 	}
 
 	rc := rawConfig{}
@@ -77,6 +84,8 @@ func Load(param LoadConfigInput) (*Config, error) {
 		c.Provider = store.SsmProvider
 	}
 
+	c.Session = aws.NewSession(a.Config{Region: &rc.Region})
+
 	variables, err := loadVariables(c, rc)
 
 	if err != nil {
@@ -92,7 +101,7 @@ func Load(param LoadConfigInput) (*Config, error) {
 		val, err := Interpolate(value, variables)
 
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to interpolate template variables")
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to interpolate config.defaults.%s", key))
 		}
 
 		c.Configs = append(c.Configs, store.ConfigInput{
@@ -103,9 +112,15 @@ func Load(param LoadConfigInput) (*Config, error) {
 	}
 
 	for key, value := range rc.Config["shared"] {
+		val, err := Interpolate(value, variables)
+
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to interpolate config.shared.%s", key))
+		}
+
 		c.Configs = append(c.Configs, store.ConfigInput{
 			Name:   formatSharedPath(param.Stage, key),
-			Value:  value,
+			Value:  val,
 			Secret: false,
 		})
 	}
@@ -171,7 +186,7 @@ func validateConfig(rc rawConfig) error {
 }
 
 func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
-	st := aws.NewSts()
+	st := aws.NewSts(c.Session)
 
 	id, err := st.GetCallerIdentity()
 
@@ -182,21 +197,21 @@ func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
 	variables := map[string]string{
 		"stage":   c.Stage,
 		"service": c.Service,
-		"region":  *aws.Session.Config.Region,
+		"region":  *c.Session.Config.Region,
 		"account": *id.Account,
 	}
 
 	for _, name := range rc.CloudformationStacks {
 		value, err := Interpolate(name, variables)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to interpolate cloudformation-stacks[%s]", name))
 		}
 		c.Stacks = append(c.Stacks, value)
 	}
 
 	// add cloudformation outputs to variables available for interpolation
 	if len(c.Stacks) > 0 {
-		cf := aws.NewCloudformation()
+		cf := aws.NewCloudformation(c.Session)
 		outputs, err := cf.GetOutputs(c.Stacks)
 
 		if err != nil {
@@ -239,4 +254,22 @@ loop:
 	}
 
 	return unique
+}
+
+func readConfigFile(path string) ([]byte, error) {
+	if path != "" {
+		s, err := ioutil.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("missing file %s", path)
+		}
+		return s, nil
+	}
+
+	for _, c := range defaultConfigPaths {
+		if s, err := ioutil.ReadFile(c); err == nil {
+			return s, nil
+		}
+	}
+
+	return nil, fmt.Errorf("missing file %s", strings.Join(defaultConfigPaths, " or "))
 }

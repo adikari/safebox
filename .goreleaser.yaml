@@ -44,7 +44,7 @@ brews:
       bash_completion.install "completions/safebox.bash" => "safebox"
       zsh_completion.install "completions/safebox.zsh" => "_safebox"
       fish_completion.install "completions/safebox.fish"
-    tap:
+    repository:
       owner: adikari
       name: homebrew-taps
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
