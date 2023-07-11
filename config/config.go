@@ -101,7 +101,7 @@ func Load(param LoadConfigInput) (*Config, error) {
 		val, err := Interpolate(value, variables)
 
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to interpolate template variables")
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to interpolate config.defaults.%s", key))
 		}
 
 		c.Configs = append(c.Configs, store.ConfigInput{
@@ -115,7 +115,7 @@ func Load(param LoadConfigInput) (*Config, error) {
 		val, err := Interpolate(value, variables)
 
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to interpolate template variables")
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to interpolate config.shared.%s", key))
 		}
 
 		c.Configs = append(c.Configs, store.ConfigInput{
@@ -204,7 +204,7 @@ func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
 	for _, name := range rc.CloudformationStacks {
 		value, err := Interpolate(name, variables)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to interpolate cloudformation-stacks[%s]", name))
 		}
 		c.Stacks = append(c.Stacks, value)
 	}
