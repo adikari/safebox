@@ -112,9 +112,15 @@ func Load(param LoadConfigInput) (*Config, error) {
 	}
 
 	for key, value := range rc.Config["shared"] {
+		val, err := Interpolate(value, variables)
+
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to interpolate template variables")
+		}
+
 		c.Configs = append(c.Configs, store.ConfigInput{
 			Name:   formatSharedPath(param.Stage, key),
-			Value:  value,
+			Value:  val,
 			Secret: false,
 		})
 	}
