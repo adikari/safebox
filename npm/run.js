@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 const { spawnSync } = require('child_process'),
+  path = require('path'),
   constants = require('./constants');
 
-const binaryPath = `${constants.bin}/${constants.binaryName}`;
+const binaryPath = path.join(constants.bin, constants.binaryName);
 
 const [, , ...args] = process.argv;
 

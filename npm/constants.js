@@ -21,7 +21,7 @@ const name = 'safebox';
 const version = packageJson.version;
 const platform = PLATFORM_MAPPING[process.platform];
 const arch = ARCH_MAPPING[process.arch];
-const ext = platform === 'win32' ? '.exe' : '';
+const ext = platform === PLATFORM_MAPPING.win32 ? '.exe' : '';
 const binaryName = `${name}${ext}`;
 const binaryUrl = `https://github.com/monebag/safebox/releases/download/v${version}/safebox_${version}_${platform}_${arch}${ext}`;
 const bin = path.join(__dirname, "bin");
