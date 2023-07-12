@@ -1,6 +1,6 @@
 {
   "name": "@adikari/safebox",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "description": "A Fast and Flexible secret manager built with love by adikari in Go",
   "main": "index.js",
   "bin": "./run.js",
