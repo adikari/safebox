@@ -6,6 +6,7 @@ import (
 	"sort"
 	"text/tabwriter"
 
+	"github.com/adikari/safebox/v2/config"
 	"github.com/adikari/safebox/v2/store"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -58,14 +59,14 @@ func list(_ *cobra.Command, _ []string) error {
 		sort.Sort(ByName(configs))
 	}
 
-	printList(configs)
+	printList(configs, config)
 
 	return nil
 }
 
-func printList(configs []store.Config) {
+func printList(configs []store.Config, cfg *config.Config) {
 	if len(configs) <= 0 {
-		fmt.Print("no configurations to list")
+		fmt.Printf("no configurations to list. stage = %s, service = %s, region = %s\n", cfg.Stage, cfg.Service, *cfg.Session.Config.Region)
 		return
 	}
 
@@ -87,8 +88,7 @@ func printList(configs []store.Config) {
 	}
 
 	fmt.Fprintln(w, "---")
-	fmt.Fprintf(w, "Total parameters = %d", len(configs))
-	fmt.Fprintln(w, "")
+	fmt.Fprintf(w, "Total parameters = %d, stage = %s, service = %s, region = %s\n", len(configs), cfg.Stage, cfg.Service, *cfg.Session.Config.Region)
 
 	w.Flush()
 }
