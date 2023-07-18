@@ -56,7 +56,6 @@ secret:
   shared:
     SHARED_KEY: "shared key"
 
-# yaml-language-server: $schema=https://raw.githubusercontent.com/monebag/safebox/main/schema.json
 ```
 
 2. Use `safebox` CLI tool to deploy your configuration.
