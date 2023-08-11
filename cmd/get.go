@@ -1,29 +1,57 @@
 package cmd
 
 import (
-	"log"
+	"fmt"
 
+	"github.com/adikari/safebox/v2/store"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 var (
-	param string
+	getParam string
 
 	getCmd = &cobra.Command{
 		Use:   "get",
-		Short: "get parameter",
+		Short: "Gets parameter",
 		RunE:  getE,
 	}
 )
 
 func init() {
-	getCmd.Flags().StringVarP(&param, "param", "p", "", "input format (json, yaml, dotenv)")
+	getCmd.Flags().StringVarP(&getParam, "param", "p", "", "parameter to get")
 	getCmd.MarkFlagRequired("param")
 
 	rootCmd.AddCommand(getCmd)
 }
 
 func getE(_ *cobra.Command, _ []string) error {
-	log.Fatalf("not implemented")
+	config, err := loadConfig()
+
+	if err != nil {
+		return errors.Wrap(err, "failed to load config")
+	}
+
+	st, err := store.GetStore(store.StoreConfig{
+		Provider: config.Provider,
+		Region:   config.Region,
+		Service:  config.Service,
+		DbDir:    config.DBDir,
+		Stage:    config.Stage,
+	})
+
+	if err != nil {
+		return errors.Wrap(err, "failed to instantiate store")
+	}
+
+	found, err := st.Get(store.ConfigInput{Name: fmt.Sprintf("%s%s", config.Prefix, getParam)})
+
+	if err != nil {
+		return errors.Wrap(err, "failed to get param")
+	}
+
+	if found != nil {
+		fmt.Printf("%s\n", *found.Value)
+	}
 	return nil
 }

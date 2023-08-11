@@ -9,7 +9,7 @@
       "type": "string",
       "description": "Name of the service. parameters will be prefixed by the value provided"
     },
-     "db_dir": {
+    "db_dir": {
       "type": "string",
       "description": "Path to directory where the database should be stored. \nEg: ~/my-path. The database will be in ~/my-path/<service>. \nYou can use relative or absolute path"
     },

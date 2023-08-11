@@ -133,10 +133,22 @@ func (s *LocalStore) DeleteMany(input []ConfigInput) error {
 }
 
 func (s *LocalStore) GetMany(input []ConfigInput) ([]Config, error) {
-	configs, err := s.read()
+	if len(input) <= 0 {
+		return []Config{}, nil
+	}
+
+	existing, err := s.read()
 
 	if err != nil {
 		return nil, nil
+	}
+
+	configs := []Config{}
+
+	for _, i := range input {
+		if found, _ := find(i.Name, existing); found != nil {
+			configs = append(configs, *found)
+		}
 	}
 
 	return configs, nil
