@@ -39,7 +39,7 @@ func list(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "failed to load config")
 	}
 
-	store, err := store.GetStore(store.StoreConfig{Session: config.Session, Provider: config.Provider})
+	store, err := store.GetStore(store.StoreConfig{Provider: config.Provider, Region: config.Region})
 
 	if err != nil {
 		return errors.Wrap(err, "failed to instantiate store")
@@ -66,7 +66,7 @@ func list(_ *cobra.Command, _ []string) error {
 
 func printList(configs []store.Config, cfg *config.Config) {
 	if len(configs) <= 0 {
-		fmt.Printf("no configurations to list. stage = %s, service = %s, region = %s\n", cfg.Stage, cfg.Service, *cfg.Session.Config.Region)
+		fmt.Printf("no configurations to list. stage = %s, service = %s, region = %s\n", cfg.Stage, cfg.Service, cfg.Region)
 		return
 	}
 
@@ -88,7 +88,7 @@ func printList(configs []store.Config, cfg *config.Config) {
 	}
 
 	fmt.Fprintln(w, "---")
-	fmt.Fprintf(w, "Total parameters = %d, stage = %s, service = %s, region = %s\n", len(configs), cfg.Stage, cfg.Service, *cfg.Session.Config.Region)
+	fmt.Fprintf(w, "Total parameters = %d, stage = %s, service = %s, region = %s\n", len(configs), cfg.Stage, cfg.Service, cfg.Region)
 
 	w.Flush()
 }

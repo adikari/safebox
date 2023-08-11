@@ -38,7 +38,7 @@ func deploy(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "failed to load config")
 	}
 
-	st, err := store.GetStore(store.StoreConfig{Session: config.Session, Provider: config.Provider})
+	st, err := store.GetStore(store.StoreConfig{Provider: config.Provider, Region: config.Region})
 
 	if err != nil {
 		return errors.Wrap(err, "failed to instantiate store")
@@ -120,7 +120,7 @@ func deploy(_ *cobra.Command, _ []string) error {
 		fmt.Printf("%d orphans removed.\n", len(orphans))
 	}
 
-	fmt.Printf("%d new configs deployed. service = %s, stage = %s, region = %s\n", len(configsToDeploy), config.Service, stage, *config.Session.Config.Region)
+	fmt.Printf("%d new configs deployed. service = %s, stage = %s, region = %s\n", len(configsToDeploy), config.Service, stage, config.Region)
 
 	if len(config.Generate) > 0 {
 		for _, t := range config.Generate {

@@ -1,22 +1,22 @@
+# yaml-language-server: $schema=../schema.json
 service: safebox
 provider: gpg
 db_dir: "."
   
-generate:
-  - type: types-node
-    path: types/env.d.ts
-  - type: json
-    path: env.json
- 
+# generate:
+#   - type: types-node
+#     path: types/env.d.ts
+#   - type: json
+#     path: env.json
+#  
 config:
   defaults:
     DB_NAME: "database name updated"
     NEW3: "endpoint updated"
 
-secret:
-  defaults:
-    API_KEY: "key of the api endpoint"
-    DB_SECRET: "database secret"
+# secret:
+#   defaults:
+#     API_KEY: "key of the api endpoint"
+#     DB_SECRET: "database secret"
 
 
-# yaml-language-server: $schema=../schema.json

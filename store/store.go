@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/adikari/safebox/v2/aws"
 	"github.com/adikari/safebox/v2/util"
-	"github.com/aws/aws-sdk-go/aws/session"
+	a "github.com/aws/aws-sdk-go/aws"
 )
 
 type Config struct {
@@ -42,15 +43,17 @@ type Store interface {
 
 type StoreConfig struct {
 	Provider string
-	Session  *session.Session
+	Region   string
 }
 
 func GetStore(cfg StoreConfig) (Store, error) {
 	switch cfg.Provider {
 	case util.SsmProvider:
-		return NewSSMStore(cfg.Session)
+		return NewSSMStore(aws.NewSession(a.Config{Region: &cfg.Region}))
 	case util.SecretsManagerProvider:
-		return NewSecretsManagerStore(cfg.Session)
+		return NewSecretsManagerStore(aws.NewSession(a.Config{Region: &cfg.Region}))
+	case util.GpgProvider:
+		return NewGpgStore()
 	default:
 		return nil, fmt.Errorf("invalid provider `%s`", cfg.Provider)
 	}

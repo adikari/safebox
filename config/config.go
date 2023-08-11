@@ -11,7 +11,6 @@ import (
 	"github.com/adikari/safebox/v2/store"
 	"github.com/adikari/safebox/v2/util"
 	a "github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
@@ -35,11 +34,11 @@ type Config struct {
 	Prefix   string
 	DBDir    string
 	Generate []Generate
+	Region   string
 	All      []store.ConfigInput
 	Configs  []store.ConfigInput
 	Secrets  []store.ConfigInput
 	Stacks   []string
-	Session  *session.Session
 }
 
 type Generate struct {
@@ -87,14 +86,14 @@ func Load(param LoadConfigInput) (*Config, error) {
 		c.Provider = util.SsmProvider
 	}
 
-	if util.IsAwsProvider(c.Provider) {
-		c.Session = aws.NewSession(a.Config{Region: &rc.Region})
+	variables, err := loadVariables(&c, rc)
+
+	if c.Region == "" {
+		c.Region = "local"
 	}
 
-	variables, err := loadVariables(c, rc)
-
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to variables for interpolation")
+		return nil, errors.Wrap(err, "failed to load variables for interpolation")
 	}
 
 	c.Prefix, err = Interpolate(getPrefix(param.Stage, c.Service, rc.Prefix), variables)
@@ -190,23 +189,27 @@ func validateConfig(rc rawConfig) error {
 	return nil
 }
 
-func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
-	if util.IsAwsProvider(c.Provider) == false {
+// loadVariables for interpolation
+// TODO: in future as we support more stores, this many need to be refactored to handled each
+func loadVariables(c *Config, rc rawConfig) (map[string]string, error) {
+	if !util.IsAwsProvider(c.Provider) {
 		return map[string]string{}, nil
 	}
 
-	st := aws.NewSts(c.Session)
+	session := aws.NewSession(a.Config{Region: &rc.Region})
+	st := aws.NewSts(session)
+	c.Region = *session.Config.Region
 
 	id, err := st.GetCallerIdentity()
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Failed to login to AWS")
 	}
 
 	variables := map[string]string{
 		"stage":   c.Stage,
 		"service": c.Service,
-		"region":  *c.Session.Config.Region,
+		"region":  c.Region,
 		"account": *id.Account,
 	}
 
@@ -220,7 +223,7 @@ func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
 
 	// add cloudformation outputs to variables available for interpolation
 	if len(c.Stacks) > 0 {
-		cf := aws.NewCloudformation(c.Session)
+		cf := aws.NewCloudformation(session)
 		outputs, err := cf.GetOutputs(c.Stacks)
 
 		if err != nil {
