@@ -12,10 +12,10 @@ import (
 )
 
 type Config struct {
-	Name     *string
+	Name     *string `strom:"id"`
 	Value    *string
 	Modified time.Time
-	Version  string
+	Version  string `strom:"increment"`
 	Type     string
 	DataType string
 }
@@ -44,6 +44,8 @@ type Store interface {
 type StoreConfig struct {
 	Provider string
 	Region   string
+	Service  string
+	DbDir    string
 }
 
 func GetStore(cfg StoreConfig) (Store, error) {
@@ -53,7 +55,7 @@ func GetStore(cfg StoreConfig) (Store, error) {
 	case util.SecretsManagerProvider:
 		return NewSecretsManagerStore(aws.NewSession(a.Config{Region: &cfg.Region}))
 	case util.GpgProvider:
-		return NewGpgStore()
+		return NewGpgStore(LocalStoreConfig{Path: cfg.DbDir, Filename: cfg.Service})
 	default:
 		return nil, fmt.Errorf("invalid provider `%s`", cfg.Provider)
 	}

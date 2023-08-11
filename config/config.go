@@ -79,6 +79,7 @@ func Load(param LoadConfigInput) (*Config, error) {
 		Service:  rc.Service,
 		Stage:    param.Stage,
 		Provider: rc.Provider,
+		DBDir:    rc.DBDir,
 		Generate: rc.Generate,
 	}
 

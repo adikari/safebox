@@ -64,7 +64,12 @@ type ExportParams struct {
 }
 
 func exportToFile(p ExportParams) error {
-	store, err := store.GetStore(store.StoreConfig{Provider: p.config.Provider, Region: p.config.Region})
+	store, err := store.GetStore(store.StoreConfig{
+		Provider: p.config.Provider,
+		Region:   p.config.Region,
+		DbDir:    p.config.DBDir,
+		Service:  p.config.Service,
+	})
 
 	if err != nil {
 		return errors.Wrap(err, "failed to instantiate store")

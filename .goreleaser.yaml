@@ -5,6 +5,8 @@ before:
     - ./scripts/completions.sh
 builds:
   - binary: safebox
+    ldflags:
+      - -s -w
     env:
       - CGO_ENABLED=0
     goos:

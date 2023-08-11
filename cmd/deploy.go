@@ -38,7 +38,12 @@ func deploy(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "failed to load config")
 	}
 
-	st, err := store.GetStore(store.StoreConfig{Provider: config.Provider, Region: config.Region})
+	st, err := store.GetStore(store.StoreConfig{
+		Provider: config.Provider,
+		Region:   config.Region,
+		Service:  config.Service,
+		DbDir:    config.DBDir,
+	})
 
 	if err != nil {
 		return errors.Wrap(err, "failed to instantiate store")

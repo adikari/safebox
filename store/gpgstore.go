@@ -2,10 +2,18 @@ package store
 
 var _ Store = &GpgStore{}
 
-type GpgStore struct{}
+type GpgStore struct {
+	svc *LocalStore
+}
 
-func NewGpgStore() (*GpgStore, error) {
-	return &GpgStore{}, nil
+func NewGpgStore(config LocalStoreConfig) (*GpgStore, error) {
+	svc, err := NewLocalStore(config)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &GpgStore{svc: svc}, nil
 }
 
 func (s *GpgStore) PutMany(input []ConfigInput) error {
