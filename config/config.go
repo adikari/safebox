@@ -162,7 +162,10 @@ func Load(param LoadConfigInput) (*Config, error) {
 }
 
 func formatSharedPath(stage string, key string) string {
-	return fmt.Sprintf("/%s/shared/%s", stage, key)
+	if stage != "" {
+		return fmt.Sprintf("/%s/shared/%s", stage, key)
+	}
+	return fmt.Sprintf("/shared/%s", key)
 }
 
 func formatPath(prefix string, key string) string {
@@ -170,12 +173,16 @@ func formatPath(prefix string, key string) string {
 }
 
 func getPrefix(stage string, service string, defaultPrefix string) string {
-	if defaultPrefix == "" {
+	if defaultPrefix != "" {
+		// TODO: validate prefix starts and ends with /
+		return defaultPrefix
+	}
+
+	if stage != "" {
 		return fmt.Sprintf("/%s/%s/", stage, service)
 	}
 
-	// TODO: validate prefix starts and ends with /
-	return defaultPrefix
+	return fmt.Sprintf("/%s/", service)
 }
 
 func validateConfig(rc rawConfig) error {

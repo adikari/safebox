@@ -12,6 +12,9 @@ config:
     DB_NAME: "database name"
     FILE_NAME: "file name"
 
+  shared:
+    KEY: "some key"
+
 secret:
   defaults:
     API_KEY: "key of the api endpoint"

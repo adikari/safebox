@@ -40,7 +40,7 @@ generate:
 config:
   defaults:
     DB_NAME: "database name updated"
-    API_ENDPOINT: "http://some-endpoint-{{ .stage }}.com"
+    API_ENDPOINT: "http://some-endpoint-{{ .stage }}.com" # stage is only available when passed through the cli flag
 
   prod:
     DB_NAME: "production db name"
@@ -62,14 +62,18 @@ secret:
 2. Use `safebox` CLI tool to deploy your configuration.
 
 ```bash
+$ safebox deploy --config path/to/safebox.yml --prompt="missing"
+
+# staged deployment when you want to have separate config per environment. 
+# eg. prod, dev
 $ safebox deploy --stage <stage> --config path/to/safebox.yml --prompt="missing"
 ```
 
 You can then run list command to view the pushed configurations.
 
 The variables under
-1. `defaults` is deployed with path prefix of `/<stage>/<service>`
-1. `shared` is deployed with path prefix of `/<stage>/shared/`
+1. `defaults` is deployed with path prefix of `/<stage>/<service>` or `/<service>`
+1. `shared` is deployed with path prefix of `/<stage>/shared/` or `/shared>`
 
 ### CLI Reference
 
@@ -93,7 +97,7 @@ Available Commands:
 Flags:
   -c, --config string   path to safebox configuration file (default "safebox.yml")
   -h, --help            help for safebox
-  -s, --stage string    stage to deploy to (default "dev")
+  -s, --stage string    stage to deploy to 
   -v, --version         version for safebox
 
 Use "safebox [command] --help" for more information about a command.

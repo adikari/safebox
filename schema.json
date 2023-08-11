@@ -61,7 +61,7 @@
     "prefix": {
       "type": "string",
       "description": "Prefix to apply to all parameters. Does not apply for shared",
-      "default": "/<stage>/<service>/"
+      "default": "/<service>/ when stage is not provided. otherwise /<stage>/service/"
     },
     "generate": {
       "type": "array",

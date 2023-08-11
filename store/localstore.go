@@ -38,10 +38,15 @@ func NewLocalStore(config LocalStoreConfig) (*LocalStore, error) {
 
 	dir := filepath.Clean(config.Directory)
 
+	filename := fmt.Sprintf("%s-%s", config.Stage, config.Filename)
+	if config.Stage == "" {
+		filename = fmt.Sprintf("%s", config.Filename)
+	}
+
 	store := &LocalStore{
 		filename: config.Filename,
 		dir:      dir,
-		path:     filepath.Join(dir, fmt.Sprintf("%s-%s", config.Stage, config.Filename)),
+		path:     filepath.Join(dir, filename),
 		stage:    config.Stage,
 	}
 
