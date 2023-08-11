@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -37,6 +38,14 @@ func NewLocalStore(config LocalStoreConfig) (*LocalStore, error) {
 	}
 
 	dir := filepath.Clean(config.Directory)
+
+	usr, _ := user.Current()
+	homedir := usr.HomeDir
+	if dir == "~" {
+		dir = homedir
+	} else if strings.HasPrefix(dir, "~/") {
+		dir = filepath.Join(homedir, dir[2:])
+	}
 
 	filename := fmt.Sprintf("%s-%s", config.Stage, config.Filename)
 	if config.Stage == "" {

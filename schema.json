@@ -117,15 +117,6 @@
       }
     }
   },
-  "required": ["service", "provider"],
-  "if": {
-    "properties": { "provider": { "const": "gpg"} } 
-  },
-  "then": {
-    "required": ["db_dir"]
-  },
-  "else": {
-    "not": { "required": ["db_dir"] }
-  }
+  "required": ["service", "provider"]
 }
 

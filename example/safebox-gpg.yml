@@ -1,7 +1,6 @@
 # yaml-language-server: $schema=../schema.json
 service: secrets
 provider: gpg
-db_dir: "."
   
 generate:
   - type: types-node

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/adikari/safebox/v2/aws"
@@ -85,6 +87,15 @@ func Load(param LoadConfigInput) (*Config, error) {
 
 	if c.Provider == "" {
 		c.Provider = util.SsmProvider
+	}
+
+	if c.DBDir == "" {
+		ex, err := os.Executable()
+		if err != nil {
+			return nil, errors.Wrap(err, "cannot determine executable's current working path")
+		}
+		exPath := filepath.Dir(ex)
+		c.DBDir = exPath
 	}
 
 	variables, err := loadVariables(&c, rc)
@@ -192,10 +203,6 @@ func validateConfig(rc rawConfig) error {
 
 	if rc.Provider == "" {
 		return fmt.Errorf("'provider' is missing")
-	}
-
-	if rc.Provider == "gpg" && rc.DBDir == "" {
-		return fmt.Errorf("'db_dir' must be provided and not be empty with gpg provider")
 	}
 
 	return nil
