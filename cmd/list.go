@@ -71,7 +71,12 @@ func list(_ *cobra.Command, _ []string) error {
 
 func printList(configs []store.Config, cfg *config.Config) {
 	if len(configs) <= 0 {
-		fmt.Printf("no configurations to list. stage = %s, service = %s, region = %s\n", cfg.Stage, cfg.Service, cfg.Region)
+
+		PrintSummary(Summary{
+			Message: "Total parameters = 0",
+			Config:  *cfg,
+		})
+
 		return
 	}
 
@@ -91,9 +96,12 @@ func printList(configs []store.Config, cfg *config.Config) {
 
 		fmt.Fprintln(w, "")
 	}
-
 	fmt.Fprintln(w, "---")
-	fmt.Fprintf(w, "Total parameters = %d, stage = %s, service = %s, region = %s\n", len(configs), cfg.Stage, cfg.Service, cfg.Region)
+
+	PrintSummary(Summary{
+		Message: fmt.Sprintf("Total parameters = %d", len(configs)),
+		Config:  *cfg,
+	})
 
 	w.Flush()
 }

@@ -125,7 +125,10 @@ func deploy(_ *cobra.Command, _ []string) error {
 		fmt.Printf("%d orphans removed.\n", len(orphans))
 	}
 
-	fmt.Printf("%d new configs deployed. service = %s, stage = %s, region = %s\n", len(configsToDeploy), config.Service, stage, config.Region)
+	PrintSummary(Summary{
+		Message: fmt.Sprintf("%d %s", len(configsToDeploy), "new configs deployed"),
+		Config:  *config,
+	})
 
 	if len(config.Generate) > 0 {
 		for _, t := range config.Generate {
