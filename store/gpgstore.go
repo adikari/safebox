@@ -17,29 +17,29 @@ func NewGpgStore(config LocalStoreConfig) (*GpgStore, error) {
 }
 
 func (s *GpgStore) PutMany(input []ConfigInput) error {
-	return nil
+	return s.svc.PutMany(input)
 }
 
 func (s *GpgStore) Put(input ConfigInput) error {
-	return nil
+	return s.svc.Put(input)
 }
 
 func (s *GpgStore) Delete(input ConfigInput) error {
-	return nil
+	return s.svc.Delete(input)
 }
 
 func (s *GpgStore) DeleteMany(input []ConfigInput) error {
-	return nil
+	return s.svc.DeleteMany(input)
 }
 
 func (s *GpgStore) GetMany(input []ConfigInput) ([]Config, error) {
-	return []Config{}, nil
+	return s.svc.GetMany(input)
 }
 
 func (s *GpgStore) Get(input ConfigInput) (*Config, error) {
-	return &Config{}, nil
+	return s.svc.Get(input)
 }
 
 func (s *GpgStore) GetByPath(path string) ([]Config, error) {
-	return []Config{}, nil
+	return s.svc.GetByPath(path)
 }

@@ -181,4 +181,3 @@ dist
 .env
 env.json
 types
-secrets

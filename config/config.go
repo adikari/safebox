@@ -187,6 +187,10 @@ func validateConfig(rc rawConfig) error {
 		return fmt.Errorf("'provider' is missing")
 	}
 
+	if rc.Provider == "gpg" && rc.DBDir == "" {
+		return fmt.Errorf("'db_dir' must be provided and not be empty with gpg provider")
+	}
+
 	return nil
 }
 
