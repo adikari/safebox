@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/adikari/safebox/v2/util"
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
@@ -17,11 +18,6 @@ type Config struct {
 	Type     string
 	DataType string
 }
-
-const (
-	SsmProvider            = "ssm"
-	SecretsManagerProvider = "secrets-manager"
-)
 
 type ConfigInput struct {
 	Name        string
@@ -51,9 +47,9 @@ type StoreConfig struct {
 
 func GetStore(cfg StoreConfig) (Store, error) {
 	switch cfg.Provider {
-	case SsmProvider:
+	case util.SsmProvider:
 		return NewSSMStore(cfg.Session)
-	case SecretsManagerProvider:
+	case util.SecretsManagerProvider:
 		return NewSecretsManagerStore(cfg.Session)
 	default:
 		return nil, fmt.Errorf("invalid provider `%s`", cfg.Provider)

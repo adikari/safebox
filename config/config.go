@@ -9,6 +9,7 @@ import (
 
 	"github.com/adikari/safebox/v2/aws"
 	"github.com/adikari/safebox/v2/store"
+	"github.com/adikari/safebox/v2/util"
 	a "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/pkg/errors"
@@ -24,6 +25,7 @@ type rawConfig struct {
 	Secret               map[string]map[string]string
 	CloudformationStacks []string `yaml:"cloudformation-stacks"`
 	Region               string   `yaml:"region"`
+	DBDir                string   `yaml:"db_dir"`
 }
 
 type Config struct {
@@ -31,6 +33,7 @@ type Config struct {
 	Service  string
 	Stage    string
 	Prefix   string
+	DBDir    string
 	Generate []Generate
 	All      []store.ConfigInput
 	Configs  []store.ConfigInput
@@ -81,10 +84,12 @@ func Load(param LoadConfigInput) (*Config, error) {
 	}
 
 	if c.Provider == "" {
-		c.Provider = store.SsmProvider
+		c.Provider = util.SsmProvider
 	}
 
-	c.Session = aws.NewSession(a.Config{Region: &rc.Region})
+	if util.IsAwsProvider(c.Provider) {
+		c.Session = aws.NewSession(a.Config{Region: &rc.Region})
+	}
 
 	variables, err := loadVariables(c, rc)
 
@@ -186,6 +191,10 @@ func validateConfig(rc rawConfig) error {
 }
 
 func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
+	if util.IsAwsProvider(c.Provider) == false {
+		return map[string]string{}, nil
+	}
+
 	st := aws.NewSts(c.Session)
 
 	id, err := st.GetCallerIdentity()
