@@ -3,10 +3,8 @@ package store
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -17,47 +15,19 @@ var _ Store = &LocalStore{}
 
 type LocalStore struct {
 	filename string
-	dir      string
 	path     string
-	stage    string
 }
 
 type LocalStoreConfig struct {
-	Directory string
-	Filename  string
-	Stage     string
+	Path string
 }
 
 func NewLocalStore(config LocalStoreConfig) (*LocalStore, error) {
-	if config.Directory == "" {
-		return nil, errors.New("invalid parameter: directory is required")
-	}
-
-	if config.Filename == "" {
-		return nil, errors.New("invalid parameter: filename is required")
-	}
-
-	dir := filepath.Clean(config.Directory)
-
-	usr, _ := user.Current()
-	homedir := usr.HomeDir
-	if dir == "~" {
-		dir = homedir
-	} else if strings.HasPrefix(dir, "~/") {
-		dir = filepath.Join(homedir, dir[2:])
-	}
-
-	filename := fmt.Sprintf("%s-%s", config.Stage, config.Filename)
-	if config.Stage == "" {
-		filename = fmt.Sprintf("%s", config.Filename)
-	}
-
 	store := &LocalStore{
-		filename: config.Filename,
-		dir:      dir,
-		path:     filepath.Join(dir, filename),
-		stage:    config.Stage,
+		path: config.Path,
 	}
+
+	dir := filepath.Dir(config.Path)
 
 	if _, err := os.Stat(dir); err == nil {
 		return store, nil

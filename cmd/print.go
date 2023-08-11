@@ -18,12 +18,7 @@ func PrintSummary(s Summary) {
 		msg += fmt.Sprintf("%s", s.Message)
 	}
 
-	if s.Config.Provider == "gpg" {
-		fmt.Printf("%s\n", msg)
-		return
-	}
-
-	if s.Config.Service != "" {
+	if s.Config.Service != "" && s.Config.Provider != "gpg" {
 		msg += fmt.Sprintf(", service = %s", s.Config.Service)
 	}
 
@@ -31,8 +26,12 @@ func PrintSummary(s Summary) {
 		msg += fmt.Sprintf(", stage = %s", s.Config.Stage)
 	}
 
-	if s.Config.Region != "" {
+	if s.Config.Region != "" && s.Config.Provider != "gpg" {
 		msg += fmt.Sprintf(", region = %s", s.Config.Region)
+	}
+
+	if s.Config.Provider == "gpg" {
+		msg += fmt.Sprintf(", file = %s", s.Config.Filepath)
 	}
 
 	fmt.Printf("%s\n", msg)

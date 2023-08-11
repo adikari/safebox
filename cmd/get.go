@@ -35,9 +35,7 @@ func getE(_ *cobra.Command, _ []string) error {
 	st, err := store.GetStore(store.StoreConfig{
 		Provider: config.Provider,
 		Region:   config.Region,
-		Service:  config.Service,
-		DbDir:    config.DBDir,
-		Stage:    config.Stage,
+		FilePath: config.Filepath,
 	})
 
 	if err != nil {

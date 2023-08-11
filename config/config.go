@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 
@@ -34,13 +35,13 @@ type Config struct {
 	Service  string
 	Stage    string
 	Prefix   string
-	DBDir    string
 	Generate []Generate
 	Region   string
 	All      []store.ConfigInput
 	Configs  []store.ConfigInput
 	Secrets  []store.ConfigInput
 	Stacks   []string
+	Filepath string
 }
 
 type Generate struct {
@@ -81,7 +82,6 @@ func Load(param LoadConfigInput) (*Config, error) {
 		Service:  rc.Service,
 		Stage:    param.Stage,
 		Provider: rc.Provider,
-		DBDir:    rc.DBDir,
 		Generate: rc.Generate,
 	}
 
@@ -89,13 +89,8 @@ func Load(param LoadConfigInput) (*Config, error) {
 		c.Provider = util.SsmProvider
 	}
 
-	if c.DBDir == "" {
-		ex, err := os.Executable()
-		if err != nil {
-			return nil, errors.Wrap(err, "cannot determine executable's current working path")
-		}
-		exPath := filepath.Dir(ex)
-		c.DBDir = exPath
+	if c.Provider == util.GpgProvider {
+		c.Filepath = getFilePath(c, rc)
 	}
 
 	variables, err := loadVariables(&c, rc)
@@ -303,4 +298,33 @@ func readConfigFile(path string) ([]byte, error) {
 	}
 
 	return nil, fmt.Errorf("missing file %s", strings.Join(defaultConfigPaths, " or "))
+}
+
+func getFilePath(config Config, rc rawConfig) string {
+	d := rc.DBDir
+	if d == "" {
+		ex, err := os.Executable()
+		exPath := "."
+		if err == nil {
+			exPath = filepath.Dir(ex)
+		}
+		d = exPath
+	}
+
+	dir := filepath.Clean(d)
+
+	usr, _ := user.Current()
+	homedir := usr.HomeDir
+	if dir == "~" {
+		dir = homedir
+	} else if strings.HasPrefix(dir, "~/") {
+		dir = filepath.Join(homedir, dir[2:])
+	}
+
+	filename := fmt.Sprintf("%s-%s", config.Stage, config.Service)
+	if config.Stage == "" {
+		filename = fmt.Sprintf("%s", config.Service)
+	}
+
+	return filepath.Join(dir, filename)
 }

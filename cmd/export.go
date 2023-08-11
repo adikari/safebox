@@ -66,9 +66,7 @@ func exportToFile(p ExportParams) error {
 	store, err := store.GetStore(store.StoreConfig{
 		Provider: p.config.Provider,
 		Region:   p.config.Region,
-		DbDir:    p.config.DBDir,
-		Service:  p.config.Service,
-		Stage:    p.config.Stage,
+		FilePath: p.config.Filepath,
 	})
 
 	if err != nil {

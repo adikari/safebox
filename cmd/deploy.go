@@ -40,9 +40,7 @@ func deploy(_ *cobra.Command, _ []string) error {
 	st, err := store.GetStore(store.StoreConfig{
 		Provider: config.Provider,
 		Region:   config.Region,
-		Service:  config.Service,
-		DbDir:    config.DBDir,
-		Stage:    config.Stage,
+		FilePath: config.Filepath,
 	})
 
 	if err != nil {
@@ -122,13 +120,8 @@ func deploy(_ *cobra.Command, _ []string) error {
 			fmt.Printf("%s\n", errors.Wrap(err, "Error: failed to remove orphan"))
 		}
 
-		fmt.Printf("%d orphans removed.\n", len(orphans))
+		fmt.Printf("orphans removed = %d.\n", len(orphans))
 	}
-
-	PrintSummary(Summary{
-		Message: fmt.Sprintf("%d %s", len(configsToDeploy), "new configs deployed"),
-		Config:  *config,
-	})
 
 	if len(config.Generate) > 0 {
 		for _, t := range config.Generate {
@@ -144,9 +137,14 @@ func deploy(_ *cobra.Command, _ []string) error {
 				continue
 			}
 
-			fmt.Printf("file written: %s\n", t.Path)
+			fmt.Printf("wrote file -> %s\n", t.Path)
 		}
 	}
+
+	PrintSummary(Summary{
+		Message: fmt.Sprintf("%s = %d", "new configs", len(configsToDeploy)),
+		Config:  *config,
+	})
 
 	return nil
 }
