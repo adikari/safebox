@@ -69,6 +69,7 @@ func exportToFile(p ExportParams) error {
 		Region:   p.config.Region,
 		DbDir:    p.config.DBDir,
 		Service:  p.config.Service,
+		Stage:    p.config.Stage,
 	})
 
 	if err != nil {

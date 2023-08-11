@@ -43,6 +43,7 @@ func deploy(_ *cobra.Command, _ []string) error {
 		Region:   config.Region,
 		Service:  config.Service,
 		DbDir:    config.DBDir,
+		Stage:    config.Stage,
 	})
 
 	if err != nil {

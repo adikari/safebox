@@ -3,21 +3,17 @@ service: secrets
 provider: gpg
 db_dir: "."
   
-# generate:
-#   - type: types-node
-#     path: types/env.d.ts
-#   - type: json
-#     path: env.json
-#  
+generate:
+  - type: types-node
+    path: types/env.d.ts
+ 
 config:
   defaults:
     DB_NAME: "database name"
     FILE_NAME: "file name"
-    REST: "new value"
 
 secret:
   defaults:
     API_KEY: "key of the api endpoint"
     DB_SECRET: "database secret"
-
 

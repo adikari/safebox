@@ -3,9 +3,12 @@ package store
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -15,16 +18,22 @@ type LocalStore struct {
 	filename string
 	dir      string
 	path     string
+	stage    string
 }
 
 type LocalStoreConfig struct {
 	Directory string
 	Filename  string
+	Stage     string
 }
 
 func NewLocalStore(config LocalStoreConfig) (*LocalStore, error) {
-	if config.Directory == "" || config.Filename == "" {
-		return nil, errors.New("path and filename is required for local store")
+	if config.Directory == "" {
+		return nil, errors.New("invalid parameter: directory is required")
+	}
+
+	if config.Filename == "" {
+		return nil, errors.New("invalid parameter: filename is required")
 	}
 
 	dir := filepath.Clean(config.Directory)
@@ -32,7 +41,8 @@ func NewLocalStore(config LocalStoreConfig) (*LocalStore, error) {
 	store := &LocalStore{
 		filename: config.Filename,
 		dir:      dir,
-		path:     filepath.Join(dir, config.Filename),
+		path:     filepath.Join(dir, fmt.Sprintf("%s-%s", config.Stage, config.Filename)),
+		stage:    config.Stage,
 	}
 
 	if _, err := os.Stat(dir); err == nil {
@@ -50,6 +60,7 @@ func NewLocalStore(config LocalStoreConfig) (*LocalStore, error) {
 
 func (s *LocalStore) PutMany(input []ConfigInput) error {
 	updates := []Config{}
+
 	for _, c := range input {
 		t := "String"
 
@@ -65,32 +76,26 @@ func (s *LocalStore) PutMany(input []ConfigInput) error {
 		updates = append(updates, Config{
 			Name:     &name,
 			Value:    &value,
-			Version:  c.Name,
+			Version:  "1",
 			Type:     t,
 			Created:  now,
 			Modified: now,
 		})
 	}
 
-	existing, _ := read(s.path)
+	existing, _ := s.read()
 	for _, e := range existing {
-		found := find(*e.Name, updates)
-		if found == nil {
+		found, i := find(*e.Name, updates)
+		if found != nil {
+			v, _ := strconv.Atoi(e.Version)
+			found.Version = strconv.Itoa(v + 1)
+			updates[i] = *found
+		} else {
 			updates = append(updates, e)
 		}
 	}
 
-	return write(updates, s.path)
-}
-
-func find(id string, all []Config) *Config {
-	for _, c := range all {
-		if *c.Name == id {
-			return &c
-		}
-	}
-
-	return nil
+	return s.write(updates)
 }
 
 func (s *LocalStore) Put(input ConfigInput) error {
@@ -98,11 +103,32 @@ func (s *LocalStore) Put(input ConfigInput) error {
 }
 
 func (s *LocalStore) DeleteMany(input []ConfigInput) error {
-	return errors.New("DeleteMany is not implemented")
+	existing, _ := s.read()
+	updates := []Config{}
+
+	for _, e := range existing {
+		found := false
+		for _, i := range input {
+			if i.Name == *e.Name {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			updates = append(updates, e)
+		}
+	}
+
+	if err := s.write(updates); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *LocalStore) GetMany(input []ConfigInput) ([]Config, error) {
-	configs, err := read(s.path)
+	configs, err := s.read()
 
 	if err != nil {
 		return nil, nil
@@ -120,16 +146,25 @@ func (s *LocalStore) Get(input ConfigInput) (*Config, error) {
 }
 
 func (s *LocalStore) GetByPath(path string) ([]Config, error) {
-	return []Config{}, errors.New("Get by path not implemented")
+	existing, _ := s.read()
+	result := []Config{}
+
+	for _, e := range existing {
+		if strings.HasPrefix(*e.Name, path) {
+			result = append(result, e)
+		}
+	}
+
+	return result, nil
 }
 
 // Read a record from json file
-func read(path string) ([]Config, error) {
-	if _, err := stat(path); err != nil {
+func (s *LocalStore) read() ([]Config, error) {
+	if _, err := stat(s.path); err != nil {
 		return []Config{}, err
 	}
 
-	b, err := ioutil.ReadFile(path)
+	b, err := ioutil.ReadFile(s.path)
 
 	if err != nil {
 		return []Config{}, err
@@ -146,22 +181,31 @@ func read(path string) ([]Config, error) {
 	return configs, nil
 }
 
-func write(configs []Config, path string) error {
+func (s *LocalStore) write(configs []Config) error {
 	b, err := json.MarshalIndent(configs, "", "\t")
 
 	if err != nil {
 		return err
 	}
 
-	if err := ioutil.WriteFile(path, b, 0644); err != nil {
+	if err := ioutil.WriteFile(s.path, b, 0644); err != nil {
 		return err
 	}
 
 	return nil
 }
 
+func find(id string, all []Config) (*Config, int) {
+	for i, c := range all {
+		if *c.Name == id {
+			return &c, i
+		}
+	}
+
+	return nil, -1
+}
+
 func stat(path string) (fi os.FileInfo, err error) {
-	// check for dir, if path isn't a directory check to see if it's a file
 	if fi, err = os.Stat(path); os.IsNotExist(err) {
 		fi, err = os.Stat(path)
 	}

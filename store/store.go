@@ -45,6 +45,7 @@ type StoreConfig struct {
 	Region   string
 	Service  string
 	DbDir    string
+	Stage    string
 }
 
 func GetStore(cfg StoreConfig) (Store, error) {
@@ -54,7 +55,7 @@ func GetStore(cfg StoreConfig) (Store, error) {
 	case util.SecretsManagerProvider:
 		return NewSecretsManagerStore(aws.NewSession(a.Config{Region: &cfg.Region}))
 	case util.GpgProvider:
-		return NewGpgStore(LocalStoreConfig{Directory: cfg.DbDir, Filename: cfg.Service})
+		return NewGpgStore(LocalStoreConfig{Directory: cfg.DbDir, Filename: cfg.Service, Stage: cfg.Stage})
 	default:
 		return nil, fmt.Errorf("invalid provider `%s`", cfg.Provider)
 	}
