@@ -25,10 +25,9 @@ var (
 	keysToExport []string
 
 	exportCmd = &cobra.Command{
-		Use:     "export",
-		Short:   "Exports all configuration to a file",
-		RunE:    export,
-		Example: `TODO: export command example`,
+		Use:   "export",
+		Short: "Exports all configuration to a file",
+		RunE:  export,
 	}
 )
 

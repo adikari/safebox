@@ -14,10 +14,9 @@ import (
 
 // runCmd represents the exec command
 var listCmd = &cobra.Command{
-	Use:     "list",
-	Short:   "Lists all the configs available",
-	RunE:    list,
-	Example: `TODO: list command example`,
+	Use:   "list",
+	Short: "Lists all the configs available",
+	RunE:  list,
 }
 
 var (

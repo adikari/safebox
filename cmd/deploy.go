@@ -14,10 +14,9 @@ var (
 	prompt        string
 
 	deployCmd = &cobra.Command{
-		Use:     "deploy",
-		Short:   "Deploys all configurations specified in config file",
-		RunE:    deploy,
-		Example: `TODO: deploy command example`,
+		Use:   "deploy",
+		Short: "Deploys all configurations specified in config file",
+		RunE:  deploy,
 	}
 )
 
