@@ -3,7 +3,6 @@ package store
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -49,13 +48,88 @@ func NewLocalStore(config LocalStoreConfig) (*LocalStore, error) {
 	return store, nil
 }
 
+func (s *LocalStore) PutMany(input []ConfigInput) error {
+	updates := []Config{}
+	for _, c := range input {
+		t := "String"
+
+		if c.Secret == true {
+			t = "SecureString"
+		}
+
+		now := time.Now()
+
+		name := c.Name
+		value := c.Value
+
+		updates = append(updates, Config{
+			Name:     &name,
+			Value:    &value,
+			Version:  c.Name,
+			Type:     t,
+			Created:  now,
+			Modified: now,
+		})
+	}
+
+	existing, _ := read(s.path)
+	for _, e := range existing {
+		found := find(*e.Name, updates)
+		if found == nil {
+			updates = append(updates, e)
+		}
+	}
+
+	return write(updates, s.path)
+}
+
+func find(id string, all []Config) *Config {
+	for _, c := range all {
+		if *c.Name == id {
+			return &c
+		}
+	}
+
+	return nil
+}
+
+func (s *LocalStore) Put(input ConfigInput) error {
+	return s.PutMany([]ConfigInput{input})
+}
+
+func (s *LocalStore) DeleteMany(input []ConfigInput) error {
+	return errors.New("DeleteMany is not implemented")
+}
+
+func (s *LocalStore) GetMany(input []ConfigInput) ([]Config, error) {
+	configs, err := read(s.path)
+
+	if err != nil {
+		return nil, nil
+	}
+
+	return configs, nil
+}
+
+func (s *LocalStore) Get(input ConfigInput) (*Config, error) {
+	if configs, _ := s.GetMany([]ConfigInput{input}); configs != nil && len(configs) > 0 {
+		return &configs[0], nil
+	}
+
+	return nil, nil
+}
+
+func (s *LocalStore) GetByPath(path string) ([]Config, error) {
+	return []Config{}, errors.New("Get by path not implemented")
+}
+
 // Read a record from json file
-func (s *LocalStore) Read() ([]Config, error) {
-	if _, err := stat(s.path); err != nil {
+func read(path string) ([]Config, error) {
+	if _, err := stat(path); err != nil {
 		return []Config{}, err
 	}
 
-	b, err := ioutil.ReadFile(s.path)
+	b, err := ioutil.ReadFile(path)
 
 	if err != nil {
 		return []Config{}, err
@@ -70,80 +144,6 @@ func (s *LocalStore) Read() ([]Config, error) {
 	}
 
 	return configs, nil
-}
-
-func (s *LocalStore) PutMany(input []ConfigInput) error {
-	configs := []Config{}
-
-	for _, c := range input {
-		t := "String"
-
-		if c.Secret == true {
-			t = "SecureString"
-		}
-
-		now := time.Now()
-
-		configs = append(configs, Config{
-			Name:     &c.Name,
-			Value:    &c.Value,
-			Version:  "1",
-			Type:     t,
-			Created:  now,
-			Modified: now,
-		})
-	}
-
-	return write(configs, s.path)
-}
-
-func (s *LocalStore) Put(input ConfigInput) error {
-	return s.PutMany([]ConfigInput{input})
-}
-
-func (s *LocalStore) Delete(input ConfigInput) error {
-	return errors.New("Delete is not implemented")
-}
-
-func (s *LocalStore) DeleteMany(input []ConfigInput) error {
-	return errors.New("DeleteMany is not implemented")
-}
-
-func (s *LocalStore) GetMany(input []ConfigInput) ([]Config, error) {
-	data, err := s.Read()
-
-	if err != nil {
-		return nil, nil
-	}
-
-	for _, d := range data {
-		fmt.Printf("%v", *d.Value)
-	}
-
-	// records, err := s.db.ReadAll("s.filename")
-	//
-	// if err != nil {
-	// 	return []Config{}, nil
-	// }
-	//
-	// configs := []Config{}
-	// for _, f := range records {
-	// 	found := Config{}
-	// 	if err := json.Unmarshal([]byte(f), &found); err != nil {
-	// 		return []Config{}, err
-	// 	}
-	// 	configs = append(configs, found)
-	// }
-
-	return []Config{}, nil
-}
-
-func (s *LocalStore) Get(input ConfigInput) (*Config, error) {
-	return &Config{}, errors.New("Get is not implemented")
-}
-
-func (s *LocalStore) GetByPath(path string) ([]Config, error) {
-	return []Config{}, errors.New("Get by path not implemented")
 }
 
 func write(configs []Config, path string) error {

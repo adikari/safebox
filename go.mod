@@ -5,7 +5,6 @@ go 1.19
 require (
 	github.com/aws/aws-sdk-go v1.44.107
 	github.com/manifoldco/promptui v0.9.0
-	github.com/nanobox-io/golang-scribble v0.0.0-20190309225732-aa3e7c118975
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.5.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -15,7 +14,6 @@ require (
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
-	github.com/jcelliott/lumber v0.0.0-20160324203708-dd349441af25 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect

@@ -33,12 +33,10 @@ var (
 )
 
 type Store interface {
-	Put(input ConfigInput) error
 	PutMany(input []ConfigInput) error
 	Get(input ConfigInput) (*Config, error)
 	GetMany(inputs []ConfigInput) ([]Config, error)
 	GetByPath(path string) ([]Config, error)
-	Delete(input ConfigInput) error
 	DeleteMany(inputs []ConfigInput) error
 }
 

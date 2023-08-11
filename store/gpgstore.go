@@ -24,10 +24,6 @@ func (s *GpgStore) Put(input ConfigInput) error {
 	return s.svc.Put(input)
 }
 
-func (s *GpgStore) Delete(input ConfigInput) error {
-	return s.svc.Delete(input)
-}
-
 func (s *GpgStore) DeleteMany(input []ConfigInput) error {
 	return s.svc.DeleteMany(input)
 }
