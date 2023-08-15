@@ -6,7 +6,7 @@ before:
 builds:
   - binary: safebox
     ldflags:
-      - -s -w
+      - -s -w -X main.version={{.Version}}
     env:
       - CGO_ENABLED=0
     goos:
