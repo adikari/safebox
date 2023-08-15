@@ -53,7 +53,7 @@ func GetStore(cfg StoreConfig) (Store, error) {
 	case util.SecretsManagerProvider:
 		return NewSecretsManagerStore(aws.NewSession(a.Config{Region: &cfg.Region}))
 	case util.GpgProvider:
-		return NewGpgStore(LocalStoreConfig{Path: cfg.FilePath})
+		return NewGpgStore(GpgStoreOptions{Path: cfg.FilePath})
 	default:
 		return nil, fmt.Errorf("invalid provider `%s`", cfg.Provider)
 	}

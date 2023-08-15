@@ -1,4 +1,5 @@
 # yaml-language-server: $schema=../schema.json
+# gpg store is in progress and not completed yet
 service: secrets
 provider: gpg
   

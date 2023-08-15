@@ -1,6 +1,6 @@
 # 📦  SafeBox
 
-SafeBox is a command line tool for managing secrets for your application. Currently it supports AWS Parameter Store, AWS Secrets Manager and GPG encrypted local file.
+SafeBox is a command line tool for managing secrets for your application. Currently it supports AWS Parameter Store and AWS Secrets Manager.
 
 ## Installation
 
@@ -158,8 +158,7 @@ Following is the configuration file will all possible options:
 
 ```yaml
 service: my-service
-provider: secrets-manager                     # ssm OR secrets-manager OR gpg
-db_dir: .                                     # Only required for gpg
+provider: secrets-manager                     # ssm OR secrets-manager 
 prefix: "/custom/prefix/{{.stage}}/"          # Optional. Defaults to /<stage>/<service>/. Prefix all parameters. Does not apply for shared
 
 stacks:                                       # Outputs from cloudformation stacks that needs to be interpolated.
@@ -187,9 +186,6 @@ secret:
 - region   - AWS Region
 
 If using `stacks` then the outputs of that Cloudformation stack is also available for interpolation.
-
-### Storing encrypted secrets locally
-You can use safebox to keey copies of your secrets and parameters locally encrypted with gpg. 
 
 ### Release
 
