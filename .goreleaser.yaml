@@ -20,8 +20,6 @@ checksum:
 archives:
   - format: 'tar.gz'
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    files:
-      - completions/*
 
 snapshot:
   name_template: "{{ incpatch .Version }}-next"

@@ -88,9 +88,7 @@ const getBinary = () => {
   
   const url = `${repository.url}/releases/download/v${version}/${name}_${version}_${platform.TARGET}.tar.gz`;
   
-  return new Binary(platform.NAME, url, version, {
-    installDirectory: join(__dirname, "node_modules", ".bin")
-  });
+  return new Binary(platform.NAME, url);
 };
 
 const run = () => {
@@ -98,9 +96,9 @@ const run = () => {
   binary.run();
 };
 
-const install = () => {
+const install = (supressLogs = false) => {
   const binary = getBinary();
-  binary.install();
+  return binary.install({}, supressLogs);
 };
 
 module.exports = {
