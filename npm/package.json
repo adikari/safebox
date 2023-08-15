@@ -1,6 +1,6 @@
 {
   "name": "@adikari/safebox",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "description": "A Fast and Flexible secret manager built with love by adikari in Go",
   "main": "index.js",
   "bin": "./run.js",
@@ -11,12 +11,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/monebag/safebox.git"
+    "url": "https://github.com/monebag/safebox"
   },
   "author": "Subash Adhikari <me@subash.com.au>",
   "license": "MIT",
   "homepage": "https://github.com/monebag/safebox",
   "dependencies": {
-    "request": "^2.88.2"
+    "binary-install": "^1.1.0",
+    "console.table": "^0.10.0"
   }
 }
