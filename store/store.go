@@ -6,22 +6,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/adikari/safebox/v2/aws"
+	"github.com/adikari/safebox/v2/util"
+	a "github.com/aws/aws-sdk-go/aws"
 )
 
 type Config struct {
 	Name     *string
 	Value    *string
 	Modified time.Time
+	Created  time.Time
 	Version  string
 	Type     string
 	DataType string
 }
-
-const (
-	SsmProvider            = "ssm"
-	SecretsManagerProvider = "secrets-manager"
-)
 
 type ConfigInput struct {
 	Name        string
@@ -35,26 +33,27 @@ var (
 )
 
 type Store interface {
-	Put(input ConfigInput) error
 	PutMany(input []ConfigInput) error
 	Get(input ConfigInput) (*Config, error)
 	GetMany(inputs []ConfigInput) ([]Config, error)
 	GetByPath(path string) ([]Config, error)
-	Delete(input ConfigInput) error
 	DeleteMany(inputs []ConfigInput) error
 }
 
 type StoreConfig struct {
 	Provider string
-	Session  *session.Session
+	Region   string
+	FilePath string
 }
 
 func GetStore(cfg StoreConfig) (Store, error) {
 	switch cfg.Provider {
-	case SsmProvider:
-		return NewSSMStore(cfg.Session)
-	case SecretsManagerProvider:
-		return NewSecretsManagerStore(cfg.Session)
+	case util.SsmProvider:
+		return NewSSMStore(aws.NewSession(a.Config{Region: &cfg.Region}))
+	case util.SecretsManagerProvider:
+		return NewSecretsManagerStore(aws.NewSession(a.Config{Region: &cfg.Region}))
+	case util.GpgProvider:
+		return NewGpgStore(GpgStoreOptions{Path: cfg.FilePath})
 	default:
 		return nil, fmt.Errorf("invalid provider `%s`", cfg.Provider)
 	}

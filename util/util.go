@@ -14,3 +14,15 @@ func ChunkSlice[T any](slice []T, chunkSize int) [][]T {
 
 	return chunks
 }
+
+func IsAwsProvider(provider string) bool {
+	providers := []string{SsmProvider, SecretsManagerProvider}
+
+	for _, p := range providers {
+		if provider == p {
+			return true
+		}
+	}
+
+	return false
+}

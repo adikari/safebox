@@ -14,10 +14,9 @@ import (
 
 // runCmd represents the exec command
 var listCmd = &cobra.Command{
-	Use:     "list",
-	Short:   "Lists all the configs available",
-	RunE:    list,
-	Example: `TODO: list command example`,
+	Use:   "list",
+	Short: "Lists all the configs available",
+	RunE:  list,
 }
 
 var (
@@ -39,7 +38,11 @@ func list(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "failed to load config")
 	}
 
-	store, err := store.GetStore(store.StoreConfig{Session: config.Session, Provider: config.Provider})
+	store, err := store.GetStore(store.StoreConfig{
+		Provider: config.Provider,
+		Region:   config.Region,
+		FilePath: config.Filepath,
+	})
 
 	if err != nil {
 		return errors.Wrap(err, "failed to instantiate store")
@@ -66,7 +69,12 @@ func list(_ *cobra.Command, _ []string) error {
 
 func printList(configs []store.Config, cfg *config.Config) {
 	if len(configs) <= 0 {
-		fmt.Printf("no configurations to list. stage = %s, service = %s, region = %s\n", cfg.Stage, cfg.Service, *cfg.Session.Config.Region)
+
+		PrintSummary(Summary{
+			Message: "Total parameters = 0",
+			Config:  *cfg,
+		})
+
 		return
 	}
 
@@ -86,9 +94,12 @@ func printList(configs []store.Config, cfg *config.Config) {
 
 		fmt.Fprintln(w, "")
 	}
-
 	fmt.Fprintln(w, "---")
-	fmt.Fprintf(w, "Total parameters = %d, stage = %s, service = %s, region = %s\n", len(configs), cfg.Stage, cfg.Service, *cfg.Session.Config.Region)
+
+	PrintSummary(Summary{
+		Message: fmt.Sprintf("Total parameters = %d", len(configs)),
+		Config:  *cfg,
+	})
 
 	w.Flush()
 }

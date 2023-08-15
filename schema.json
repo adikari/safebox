@@ -1,8 +1,9 @@
 
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-06/schema#",
   "additionalProperties": false,
   "description": "Configuration for safebox to deploy parameters to various parameter stores",
+  "type": "object",
   "properties": {
     "service": {
       "type": "string",
@@ -11,6 +12,7 @@
     "provider": {
       "type": "string",
       "enum": ["ssm", "secrets-manager"],
+      "default": "ssm",
       "description": "Deploy parameters to the given provider. Eg. ssm, secrets-manager"
     },
     "region": {
@@ -55,7 +57,7 @@
     "prefix": {
       "type": "string",
       "description": "Prefix to apply to all parameters. Does not apply for shared",
-      "default": "/<stage>/<service>/"
+      "default": "/<service>/ when stage is not provided. otherwise /<stage>/service/"
     },
     "generate": {
       "type": "array",
@@ -111,7 +113,6 @@
       }
     }
   },
-  "required": ["service", "provider"],
-  "type": "object"
+  "required": ["service", "provider"]
 }
 

@@ -5,6 +5,8 @@ before:
     - ./scripts/completions.sh
 builds:
   - binary: safebox
+    ldflags:
+      - -s -w
     env:
       - CGO_ENABLED=0
     goos:
@@ -16,7 +18,7 @@ checksum:
   name_template: 'checksums.txt'
 
 archives:
-  - format: 'binary'
+  - format: 'tar.gz'
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files:
       - completions/*

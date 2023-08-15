@@ -11,10 +11,9 @@ var (
 	inputFile    string
 
 	importCmd = &cobra.Command{
-		Use:     "import",
-		Short:   "Imports all configuration from a file",
-		RunE:    importE,
-		Example: `TODO: import command example`,
+		Use:   "import",
+		Short: "Imports all configuration from a file",
+		RunE:  importE,
 	}
 )
 

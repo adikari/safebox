@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"os"
+	"os/user"
+	"path/filepath"
 	"strings"
 
 	"github.com/adikari/safebox/v2/aws"
 	"github.com/adikari/safebox/v2/store"
+	"github.com/adikari/safebox/v2/util"
 	a "github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
@@ -24,6 +27,7 @@ type rawConfig struct {
 	Secret               map[string]map[string]string
 	CloudformationStacks []string `yaml:"cloudformation-stacks"`
 	Region               string   `yaml:"region"`
+	DBDir                string   `yaml:"db_dir"`
 }
 
 type Config struct {
@@ -32,11 +36,12 @@ type Config struct {
 	Stage    string
 	Prefix   string
 	Generate []Generate
+	Region   string
 	All      []store.ConfigInput
 	Configs  []store.ConfigInput
 	Secrets  []store.ConfigInput
 	Stacks   []string
-	Session  *session.Session
+	Filepath string
 }
 
 type Generate struct {
@@ -81,15 +86,21 @@ func Load(param LoadConfigInput) (*Config, error) {
 	}
 
 	if c.Provider == "" {
-		c.Provider = store.SsmProvider
+		c.Provider = util.SsmProvider
 	}
 
-	c.Session = aws.NewSession(a.Config{Region: &rc.Region})
+	if c.Provider == util.GpgProvider {
+		c.Filepath = getFilePath(c, rc)
+	}
 
-	variables, err := loadVariables(c, rc)
+	variables, err := loadVariables(&c, rc)
+
+	if c.Region == "" {
+		c.Region = "local"
+	}
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to variables for interpolation")
+		return nil, errors.Wrap(err, "failed to load variables for interpolation")
 	}
 
 	c.Prefix, err = Interpolate(getPrefix(param.Stage, c.Service, rc.Prefix), variables)
@@ -157,7 +168,10 @@ func Load(param LoadConfigInput) (*Config, error) {
 }
 
 func formatSharedPath(stage string, key string) string {
-	return fmt.Sprintf("/%s/shared/%s", stage, key)
+	if stage != "" {
+		return fmt.Sprintf("/%s/shared/%s", stage, key)
+	}
+	return fmt.Sprintf("/shared/%s", key)
 }
 
 func formatPath(prefix string, key string) string {
@@ -165,12 +179,16 @@ func formatPath(prefix string, key string) string {
 }
 
 func getPrefix(stage string, service string, defaultPrefix string) string {
-	if defaultPrefix == "" {
+	if defaultPrefix != "" {
+		// TODO: validate prefix starts and ends with /
+		return defaultPrefix
+	}
+
+	if stage != "" {
 		return fmt.Sprintf("/%s/%s/", stage, service)
 	}
 
-	// TODO: validate prefix starts and ends with /
-	return defaultPrefix
+	return fmt.Sprintf("/%s/", service)
 }
 
 func validateConfig(rc rawConfig) error {
@@ -185,19 +203,27 @@ func validateConfig(rc rawConfig) error {
 	return nil
 }
 
-func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
-	st := aws.NewSts(c.Session)
+// loadVariables for interpolation
+// TODO: in future as we support more stores, this many need to be refactored to handled each
+func loadVariables(c *Config, rc rawConfig) (map[string]string, error) {
+	if !util.IsAwsProvider(c.Provider) {
+		return map[string]string{}, nil
+	}
+
+	session := aws.NewSession(a.Config{Region: &rc.Region})
+	st := aws.NewSts(session)
+	c.Region = *session.Config.Region
 
 	id, err := st.GetCallerIdentity()
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Failed to login to AWS")
 	}
 
 	variables := map[string]string{
 		"stage":   c.Stage,
 		"service": c.Service,
-		"region":  *c.Session.Config.Region,
+		"region":  c.Region,
 		"account": *id.Account,
 	}
 
@@ -211,7 +237,7 @@ func loadVariables(c Config, rc rawConfig) (map[string]string, error) {
 
 	// add cloudformation outputs to variables available for interpolation
 	if len(c.Stacks) > 0 {
-		cf := aws.NewCloudformation(c.Session)
+		cf := aws.NewCloudformation(session)
 		outputs, err := cf.GetOutputs(c.Stacks)
 
 		if err != nil {
@@ -272,4 +298,33 @@ func readConfigFile(path string) ([]byte, error) {
 	}
 
 	return nil, fmt.Errorf("missing file %s", strings.Join(defaultConfigPaths, " or "))
+}
+
+func getFilePath(config Config, rc rawConfig) string {
+	d := rc.DBDir
+	if d == "" {
+		ex, err := os.Executable()
+		exPath := "."
+		if err == nil {
+			exPath = filepath.Dir(ex)
+		}
+		d = exPath
+	}
+
+	dir := filepath.Clean(d)
+
+	usr, _ := user.Current()
+	homedir := usr.HomeDir
+	if dir == "~" {
+		dir = homedir
+	} else if strings.HasPrefix(dir, "~/") {
+		dir = filepath.Join(homedir, dir[2:])
+	}
+
+	filename := fmt.Sprintf("%s-%s", config.Stage, config.Service)
+	if config.Stage == "" {
+		filename = fmt.Sprintf("%s", config.Service)
+	}
+
+	return filepath.Join(dir, filename)
 }

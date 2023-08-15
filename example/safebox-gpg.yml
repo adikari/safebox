@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=../schema.json
+# gpg store is in progress and not completed yet
+service: secrets
+provider: gpg
+  
+generate:
+  - type: types-node
+    path: types/env.d.ts
+ 
+config:
+  defaults:
+    DB_NAME: "database name"
+    FILE_NAME: "file name"
+
+  shared:
+    KEY: "some key"
+
+secret:
+  defaults:
+    API_KEY: "key of the api endpoint"
+    DB_SECRET: "database secret"
+
