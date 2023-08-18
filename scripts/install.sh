@@ -29,6 +29,7 @@ download_binary_and_run_installer() {
     need_cmd dirname
     need_cmd awk
     need_cmd cut
+    need_cmd tar
 
     get_architecture || return 1
     local _arch="$RETVAL"
@@ -42,23 +43,27 @@ download_binary_and_run_installer() {
     esac
 
 		local _current_dir=$(pwd)
-    local _binary="safebox_${PACKAGE_VERSION:1}"_"${_arch}"
-    local _url="$BINARY_DOWNLOAD_PREFIX/$PACKAGE_VERSION/${_binary}$_ext"
+    
+    local _tar="safebox_""${PACKAGE_VERSION:1}""_${_arch}.tar.gz"
+    local _url="$BINARY_DOWNLOAD_PREFIX/$PACKAGE_VERSION/${_tar}"
     local _dir="$(mktemp -d 2>/dev/null || ensure mktemp -d -t test)"
-    local _safebox="$_dir/safebox$_ext"
 		local _bin_dir="/usr/local/bin"
 
 		cd $_dir
-    say "downloading safebox from $_url" 1>&2
 
-    ensure mkdir -p "$_dir"
-    downloader "$_url" "$_safebox"
-    if [ $? != 0 ]; then
-      say "failed to download $_url"
-      exit 1
+    if [ ! -f "$_dir/$_tar" ];then 
+      say "downloading safebox from $_url" 1>&2
+      ensure mkdir -p "$_dir"
+      downloader "$_url" "$_dir/$_tar"
+      if [ $? != 0 ]; then
+        say "failed to download $_url"
+        exit 1
+      fi
     fi
 
-		sudo mv "$_safebox" "$_bin_dir"
+    tar -xf $_tar
+
+		sudo mv "$_dir/dist/safebox$_ext" "$_bin_dir"
     local _retval=$?
 
     chmod +x "${_bin_dir}/safebox"
@@ -72,6 +77,8 @@ download_binary_and_run_installer() {
 get_architecture() {
     local _ostype="$(uname -s)"
     local _cputype="$(uname -m)"
+
+    [[ $_cputype = "aarch64" ]] && _cputype="arm64"
 
     RETVAL="$_ostype"_"$_cputype"
 }
