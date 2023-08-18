@@ -71,6 +71,8 @@ download_binary_and_run_installer() {
     ignore rm -rf "$_dir"
 
 		cd $_current_dir
+
+    echo "safebox was installed successfully to $_bin_dir/safebox"
     return "$_retval"
 }
 
