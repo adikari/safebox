@@ -47,7 +47,9 @@ download_binary_and_run_installer() {
     local _tar="safebox_""${PACKAGE_VERSION:1}""_${_arch}.tar.gz"
     local _url="$BINARY_DOWNLOAD_PREFIX/$PACKAGE_VERSION/${_tar}"
     local _dir="$(mktemp -d 2>/dev/null || ensure mktemp -d -t test)"
-		local _bin_dir="/usr/local/bin"
+		local _bin_dir="$HOME/.local/bin"
+
+    mkdir -p $_bin_dir
 
 		cd $_dir
 
@@ -63,7 +65,7 @@ download_binary_and_run_installer() {
 
     tar -xf $_tar
 
-		sudo mv "$_dir/dist/safebox$_ext" "$_bin_dir"
+		mv "$_dir/dist/safebox$_ext" "$_bin_dir"
     local _retval=$?
 
     chmod +x "${_bin_dir}/safebox"
@@ -81,6 +83,7 @@ get_architecture() {
     local _cputype="$(uname -m)"
 
     [[ $_cputype = "aarch64" ]] && _cputype="arm64"
+    [[ $_cputype = "x86_64" ]] && _cputype="amd64"
 
     RETVAL="$_ostype"_"$_cputype"
 }
