@@ -3,63 +3,63 @@ const os = require("os");
 const { join } = require("path");
 const cTable = require("console.table");
 
-const error = msg => {
+const error = (msg) => {
   console.error(msg);
   process.exit(1);
 };
 
 const { version, repository } = require("./package.json");
 
-const name = 'safebox';
+const name = "safebox";
 
 const supportedPlatforms = [
   {
     TYPE: "Darwin",
     ARCHITECTURE: "x64",
     TARGET: "darwin_amd64",
-    NAME: name
+    NAME: name,
   },
   {
     TYPE: "Darwin",
     ARCHITECTURE: "arm64",
     TARGET: "darwin_arm64",
-    NAME: name
+    NAME: name,
   },
   {
     TYPE: "Windows_NT",
     ARCHITECTURE: "x64",
-    TARGET: "windows_amd64.exe",
-    NAME: `${name}.exe`
+    TARGET: "windows_amd64",
+    NAME: `${name}.exe`,
   },
   {
     TYPE: "Windows_NT",
     ARCHITECTURE: "arm64",
-    TARGET: "windows_arm64.exe",
-    NAME: `${name}.exe`
+    TARGET: "windows_arm64",
+    NAME: `${name}.exe`,
   },
   {
     TYPE: "Windows_NT",
     ARCHITECTURE: "ia32",
-    TARGET: "windows_386.exe",
-    NAME: `${name}.exe`
+    TARGET: "windows_386",
+    NAME: `${name}.exe`,
   },
   {
     TYPE: "Linux",
     ARCHITECTURE: "ia32",
     TARGET: "linux_386",
-    NAME: name
+    NAME: name,
   },
   {
     TYPE: "Linux",
     ARCHITECTURE: "x64",
     TARGET: "linux_amd64",
-    NAME: name
+    NAME: name,
   },
   {
     TYPE: "Linux",
     ARCHITECTURE: "arm64",
     TARGET: "linux_arm64",
-    NAME: name
+    NAME: name,
   },
 ];
 
@@ -78,16 +78,16 @@ const getPlatform = () => {
 
   error(
     `Platform with type "${type}" and architecture "${architecture}" is not supported by ${name}.\nYour system must be one of the following:\n\n${cTable.getTable(
-      supportedPlatforms
-    )}`
+      supportedPlatforms,
+    )}`,
   );
 };
 
 const getBinary = () => {
   const platform = getPlatform();
-  
+
   const url = `${repository.url}/releases/download/v${version}/${name}_${version}_${platform.TARGET}.tar.gz`;
-  
+
   return new Binary(platform.NAME, url);
 };
 
@@ -103,5 +103,5 @@ const install = (supressLogs = false) => {
 
 module.exports = {
   install,
-  run
+  run,
 };
