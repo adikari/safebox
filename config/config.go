@@ -82,7 +82,6 @@ func Load(param LoadConfigInput) (*Config, error) {
 		Service:  rc.Service,
 		Stage:    param.Stage,
 		Provider: rc.Provider,
-		Generate: rc.Generate,
 	}
 
 	if c.Provider == "" {
@@ -119,6 +118,19 @@ func Load(param LoadConfigInput) (*Config, error) {
 			Name:   formatPath(c.Prefix, key),
 			Value:  val,
 			Secret: false,
+		})
+	}
+
+	for _, value := range rc.Generate {
+		path, err := Interpolate(value.Path, variables)
+
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to interpolate generate: type: %s, path: %s", value.Type, value.Path))
+		}
+
+		c.Generate = append(c.Generate, Generate{
+			Type: value.Type,
+			Path: path,
 		})
 	}
 
